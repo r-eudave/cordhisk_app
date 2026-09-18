@@ -400,6 +400,95 @@ def _cho_display_label(cho):
   return f"{cho_id} ({cho.title})" if cho.title else cho_id
 
 
+def _build_memory_cho_matrix(memories, cho_rows, metadata_by_memory_id):
+  cho_lookup = _build_cho_lookup(cho_rows)
+  cho_keys = []
+  cho_totals = {}
+  for cho in cho_rows:
+    cho_key = str(cho.custom_id or cho.id)
+    cho_keys.append(cho_key)
+    cho_totals[cho_key] = 0
+
+  cell_counts = {}
+  memory_totals = {}
+  for memory in memories:
+    memory_total = 0
+    for md in metadata_by_memory_id.get(memory.id, []):
+      if md.get("type") != MetadataType.CHO.value or not md.get("cho"):
+        continue
+      cho = cho_lookup.get(str(md.get("cho")))
+      if cho is None:
+        continue
+      cho_key = str(cho.custom_id or cho.id)
+      cell_key = (memory.id, cho_key)
+      cell_counts[cell_key] = cell_counts.get(cell_key, 0) + 1
+      cho_totals[cho_key] += 1
+      memory_total += 1
+    memory_totals[memory.id] = memory_total
+
+  matrix_cho_columns = [
+    {
+      "key": cho_key,
+      "label": _cho_display_label(cho),
+      "total": cho_totals[cho_key],
+    }
+    for cho_key, cho in zip(cho_keys, cho_rows)
+  ]
+  matrix_memory_rows = [
+    {
+      "id": memory.id,
+      "label": f"{memory.custom_id or memory.id} - {memory.title or ('Memory ' + str(memory.id))}",
+      "total": memory_totals.get(memory.id, 0),
+      "values": {cho_key: cell_counts.get((memory.id, cho_key), 0) for cho_key in cho_keys},
+    }
+    for memory in memories
+  ]
+  return matrix_cho_columns, matrix_memory_rows
+
+
+def _build_memory_field_matrix(memories, metadata_by_memory_id):
+  field_keys = []
+  field_totals = {}
+  cell_counts = {}
+  memory_totals = {}
+  for memory in memories:
+    memory_total = 0
+    for md in metadata_by_memory_id.get(memory.id, []):
+      if md.get("type") != MetadataType.CHO.value:
+        continue
+      field = md.get("field", "")
+      if not field:
+        continue
+      if field not in field_totals:
+        field_totals[field] = 0
+        field_keys.append(field)
+      cell_key = (memory.id, field)
+      cell_counts[cell_key] = cell_counts.get(cell_key, 0) + 1
+      field_totals[field] += 1
+      memory_total += 1
+    memory_totals[memory.id] = memory_total
+
+  field_keys.sort(key=lambda field: field.casefold())
+  matrix_field_columns = [
+    {
+      "key": field,
+      "label": _metadata_label(field),
+      "total": field_totals[field],
+    }
+    for field in field_keys
+  ]
+  matrix_field_memory_rows = [
+    {
+      "id": memory.id,
+      "label": f"{memory.custom_id or memory.id} - {memory.title or ('Memory ' + str(memory.id))}",
+      "total": memory_totals.get(memory.id, 0),
+      "values": {field: cell_counts.get((memory.id, field), 0) for field in field_keys},
+    }
+    for memory in memories
+  ]
+  return matrix_field_columns, matrix_field_memory_rows
+
+
 def _build_graph_data(selected_memory_id=None, focus_cho=None):
   memories = session.query(Memory).order_by(Memory.id).all()
   cho_rows = session.query(CHO).order_by(CHO.id).all()
@@ -1345,17 +1434,27 @@ def create_app(testing=False):
     chos = session.query(CHO).order_by(CHO.id).all()
     selected_cho = request.args.get("cho_id", "").strip()
     view = request.args.get("view", "compare").strip().lower()
-    if view not in {"compare", "report"}:
+    if view not in {"compare", "report", "matrix", "fields"}:
       view = "compare"
     memory_columns = []
     matrix_rows = []
     report_sections = []
-    metadata_by_memory_id = _build_metadata_cache(session.query(Memory).order_by(Memory.id).all())
+    matrix_cho_columns = []
+    matrix_memory_rows = []
+    matrix_field_columns = []
+    matrix_field_memory_rows = []
+    all_memories = session.query(Memory).order_by(func.lower(Memory.custom_id), Memory.id).all()
+    metadata_by_memory_id = _build_metadata_cache(all_memories)
+
+    if view == "matrix":
+      matrix_cho_columns, matrix_memory_rows = _build_memory_cho_matrix(all_memories, chos, metadata_by_memory_id)
+    elif view == "fields":
+      matrix_field_columns, matrix_field_memory_rows = _build_memory_field_matrix(all_memories, metadata_by_memory_id)
 
     if selected_cho:
       field_memory_values = {}
       report_values = {}
-      for memory in session.query(Memory).order_by(Memory.id):
+      for memory in all_memories:
         memory_label = f"{memory.custom_id or memory.id} - {memory.title or ('Memory ' + str(memory.id))}"
         memory_columns.append({"id": memory.id, "label": memory_label})
         for md in metadata_by_memory_id.get(memory.id, []):
@@ -1416,6 +1515,10 @@ def create_app(testing=False):
       memory_columns=memory_columns,
       matrix_rows=matrix_rows,
       report_sections=report_sections,
+      matrix_cho_columns=matrix_cho_columns,
+      matrix_memory_rows=matrix_memory_rows,
+      matrix_field_columns=matrix_field_columns,
+      matrix_field_memory_rows=matrix_field_memory_rows,
       field_descriptions={row["field"]: _metadata_description(row["field"]) for row in matrix_rows},
     )
 

@@ -1349,11 +1349,71 @@ COMPARE_TEMPLATE = """
           <div class="view-toggle">
             <label><input type="radio" name="view" value="compare" {% if view == 'compare' %}checked{% endif %}> Compare</label>
             <label><input type="radio" name="view" value="report" {% if view == 'report' %}checked{% endif %}> Report</label>
+            <label><input type="radio" name="view" value="matrix" {% if view == 'matrix' %}checked{% endif %}> Memory/CHO matrix</label>
+            <label><input type="radio" name="view" value="fields" {% if view == 'fields' %}checked{% endif %}> Memory/Field matrix</label>
           </div>
           <button type="submit">Show results</button>
         </form>
       </div>
-      {% if selected_cho %}
+      {% if view == 'matrix' %}
+      <div class="card">
+        <h2>Memory / CHO matrix</h2>
+        <p>Number of metadata tags each memory has for each CHO. Totals in brackets show the CHO's or memory's overall annotation count.</p>
+        <div class="matrix-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>Memory</th>
+                {% for column in matrix_cho_columns %}
+                <th><a href="/?focus_cho={{ column.key }}">{{ column.label }} [{{ column.total }}]</a></th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in matrix_memory_rows %}
+              <tr>
+                <td><a href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
+                {% for column in matrix_cho_columns %}
+                <td>{{ row['values'].get(column.key, 0) }}</td>
+                {% endfor %}
+              </tr>
+              {% else %}
+              <tr><td colspan="{{ (matrix_cho_columns|length) + 1 }}">No memories found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% elif view == 'fields' %}
+      <div class="card">
+        <h2>Memory / Field matrix</h2>
+        <p>Number of times each metadata field appears within each memory, regardless of CHO. Totals in brackets show the field's or memory's overall annotation count.</p>
+        <div class="matrix-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>Memory</th>
+                {% for column in matrix_field_columns %}
+                <th><span class="field-name" title="{{ field_descriptions.get(column.key, column.label) }}">{{ column.label }}</span> [{{ column.total }}]</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in matrix_field_memory_rows %}
+              <tr>
+                <td><a href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
+                {% for column in matrix_field_columns %}
+                <td>{{ row['values'].get(column.key, 0) }}</td>
+                {% endfor %}
+              </tr>
+              {% else %}
+              <tr><td colspan="{{ (matrix_field_columns|length) + 1 }}">No memories found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% elif selected_cho %}
       <div class="card">
         <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for CHO <a href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
         {% if view == 'report' %}

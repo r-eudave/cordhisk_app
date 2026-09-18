@@ -29,6 +29,8 @@ Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's deve
 - Search memory text with paginated results.
 - Compare one CHO across its related memories in a field-by-memory matrix.
 - Generate a CHO report grouped by metadata field and instance frequency, with links to related memories and CSV download.
+- View a Memory/CHO matrix showing, for every memory and CHO, the number of annotation tags between them, with total annotation counts per memory and per CHO.
+- View a Memory/Field matrix showing, for every memory and metadata field (e.g. title, description), how many times that field appears within the memory, regardless of CHO.
 - Export Memory and CHO metadata as downloadable RDF/XML.
 
 ## Data storage

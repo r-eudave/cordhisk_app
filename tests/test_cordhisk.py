@@ -764,6 +764,67 @@ class WebAppTests(unittest.TestCase):
             session.delete(cho)
             session.commit()
 
+    def test_memory_cho_matrix_shows_counts_and_totals(self):
+        suffix = uuid.uuid4().hex
+        cho_one = CHO(custom_id=f'CHO-MATRIX-ONE-{suffix}', title='Matrix CHO One')
+        cho_two = CHO(custom_id=f'CHO-MATRIX-TWO-{suffix}', title='Matrix CHO Two')
+        memory = Memory(
+            custom_id=f'test-matrix-memory-{suffix}',
+            title='Matrix memory',
+            text=(
+                f'<dc:title cho="{cho_one.custom_id}">first</dc:title> '
+                f'<dc:subject cho="{cho_one.custom_id}">second</dc:subject> '
+                f'<dc:title cho="{cho_two.custom_id}">third</dc:title>'
+            ),
+            file_path='demo.txt',
+        )
+        session.add_all([cho_one, cho_two, memory])
+        session.commit()
+
+        try:
+            response = self.client.get('/compare?view=matrix')
+            self.assertEqual(response.status_code, 200)
+            page = response.data.decode()
+            self.assertIn('Memory / CHO matrix', page)
+            self.assertIn(f'{cho_one.custom_id} (Matrix CHO One) [2]', page)
+            self.assertIn(f'{cho_two.custom_id} (Matrix CHO Two) [1]', page)
+            self.assertIn(f'{memory.custom_id} - Matrix memory [3]', page)
+            self.assertIn(f'href="/?focus_cho={cho_one.custom_id}"', page)
+            self.assertIn(f'href="/?memory_id={memory.id}"', page)
+        finally:
+            session.delete(memory)
+            session.delete(cho_one)
+            session.delete(cho_two)
+            session.commit()
+
+    def test_memory_field_matrix_shows_counts_and_totals(self):
+        suffix = uuid.uuid4().hex
+        memory = Memory(
+            custom_id=f'test-field-matrix-memory-{suffix}',
+            title='Field matrix memory',
+            text=(
+                '<dc:zzfieldalpha cho="DUMMY">first</dc:zzfieldalpha> '
+                '<dc:zzfieldalpha cho="DUMMY">second</dc:zzfieldalpha> '
+                '<dc:zzfieldbeta cho="DUMMY">third</dc:zzfieldbeta>'
+            ),
+            file_path='demo.txt',
+        )
+        session.add(memory)
+        session.commit()
+
+        try:
+            response = self.client.get('/compare?view=fields')
+            self.assertEqual(response.status_code, 200)
+            page = response.data.decode()
+            self.assertIn('Memory / Field matrix', page)
+            self.assertIn('>Zzfieldalpha</span> [2]', page)
+            self.assertIn('>Zzfieldbeta</span> [1]', page)
+            self.assertIn(f'{memory.custom_id} - Field matrix memory [3]', page)
+            self.assertIn(f'href="/?memory_id={memory.id}"', page)
+        finally:
+            session.delete(memory)
+            session.commit()
+
     def test_delete_duplicate_cho_metadata_removes_selected_occurrence(self):
         memory = Memory(
             custom_id='test-delete-duplicate-cho-md',
