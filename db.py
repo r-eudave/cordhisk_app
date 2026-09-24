@@ -2,6 +2,7 @@ import json
 import os
 from sqlalchemy import create_engine, Column, Integer, String, Text, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker
+from config import APP_DATA_DIR
 
 # =========================
 # BASE
@@ -57,11 +58,7 @@ class MetadataSpace(Base):
 # =========================
 # PATH SETUP 
 # =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-MEMORY_DIR = os.path.join(BASE_DIR, "memory_files")
-
-os.makedirs(MEMORY_DIR, exist_ok=True)
+MEMORY_DIR = APP_DATA_DIR
 
 DB_PATH = os.path.join(MEMORY_DIR, "000_cordhisk.db")
 

@@ -13,3 +13,8 @@ memory_files/
 
 
 .ipynb_checkpoints/
+
+# PyInstaller build output
+build/
+dist/
+*.spec

@@ -69,6 +69,27 @@ Run the automated web application tests with:
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
+## Portable desktop builds
+
+The application can be packaged as a portable desktop build with PyInstaller. Build on the target operating system because PyInstaller does not cross-compile executables.
+
+On macOS:
+
+```bash
+chmod +x build_macos.sh
+./build_macos.sh
+open dist/CORDHISK-App-v3.0/CORDHISK-App-v3.0
+```
+
+On Windows PowerShell:
+
+```powershell
+.\build_windows.ps1
+.\dist\CORDHISK-App-v3.0\CORDHISK-App-v3.0.exe
+```
+
+The generated onedir bundle includes a writable `memory_files/` directory beside the executable. This keeps the SQLite database and memory files persistent and portable with the application folder. The launcher opens the application in the default browser. Set `CORDHISK_PORT` if port 5000 is already in use.
+
 ## Project structure
 
 - `cordhisk.py`: Flask application and HTTP routes.
