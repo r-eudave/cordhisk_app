@@ -3,6 +3,7 @@ import sys
 import threading
 import webbrowser
 import logging
+import tempfile
 
 
 def _configure_logging():
@@ -11,6 +12,15 @@ def _configure_logging():
     else:
         application_dir = os.path.dirname(os.path.abspath(__file__))
     log_path = os.path.join(application_dir, "cordhisk.log")
+    try:
+        os.makedirs(application_dir, exist_ok=True)
+        with open(log_path, "a", encoding="utf-8"):
+            pass
+    except OSError:
+        application_data = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
+        application_dir = os.path.join(application_data, "CORDHISK")
+        os.makedirs(application_dir, exist_ok=True)
+        log_path = os.path.join(application_dir, "cordhisk.log")
     logging.basicConfig(
         filename=log_path,
         level=logging.INFO,

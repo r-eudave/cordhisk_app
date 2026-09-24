@@ -92,6 +92,8 @@ The generated onedir bundle includes a writable `memory_files/` directory beside
 
 Keep the complete Windows `executable_win/` folder together when moving the application; do not copy only the `.exe`. If the browser shows an internal server error, close the application and inspect `executable_win/cordhisk.log`, then share that traceback when reporting the problem.
 
+If Windows prevents writing beside the executable, CORDHISK automatically uses `%LOCALAPPDATA%\CORDHISK\memory_files` for its database and memory files, and `%LOCALAPPDATA%\CORDHISK\cordhisk.log` for diagnostics.
+
 ## Project structure
 
 - `cordhisk.py`: Flask application and HTTP routes.

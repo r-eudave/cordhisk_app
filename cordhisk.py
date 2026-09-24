@@ -1088,7 +1088,7 @@ def create_app(testing=False):
     LOGGER.exception("Unhandled error while serving %s %s", request.method, request.path)
     if testing:
       raise error
-    return "Internal Server Error. See cordhisk.log beside the executable.", 500
+    return f"Internal Server Error: {type(error).__name__}: {error}", 500
 
   @app.route("/")
   def index():
