@@ -316,7 +316,8 @@ class WebAppTests(unittest.TestCase):
             session.commit()
 
     def test_tag_selection_is_exclusive(self):
-        response = self.client.get('/')
+        memory = session.query(Memory).order_by(Memory.id).first()
+        response = self.client.get(f'/?memory_id={memory.id}')
         self.assertEqual(response.status_code, 200)
         page = response.data.decode()
         self.assertIn("document.querySelectorAll('.tag-selector input').forEach(function (otherInput)", page)
@@ -325,7 +326,8 @@ class WebAppTests(unittest.TestCase):
         self.assertNotIn('<div class="cho-filter-row">\n                    <button type="submit"', page)
 
     def test_memory_selection_shows_edit_id_dialog(self):
-        response = self.client.get('/')
+        memory = session.query(Memory).order_by(Memory.id).first()
+        response = self.client.get(f'/?memory_id={memory.id}')
         self.assertEqual(response.status_code, 200)
         page = response.data.decode()
         self.assertIn('id="show-memories-btn"', page)
@@ -349,7 +351,7 @@ class WebAppTests(unittest.TestCase):
     def test_graph_page_loads(self):
         response = self.client.get('/graph')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'CORDHISK APP v2.4', response.data)
+        self.assertIn(b'CORDHISK APP v3.0', response.data)
         self.assertIn(b'CHO records', response.data)
 
     def test_edit_cho_metadata_updates_memory_text(self):

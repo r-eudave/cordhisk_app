@@ -109,9 +109,13 @@ Selecting a CHO opens a CHO-centred view. The application identifies every memor
 
 CHO view is controlled by the `focus_cho` query parameter. It is intentionally distinct from `filter_cho`: `focus_cho` changes the whole workspace into a CHO-centred mode, whereas `filter_cho` only narrows the metadata tags displayed inside a selected memory.
 
+When no memory or CHO is selected, the main workspace displays a short onboarding summary. The desktop shell is fixed to the browser viewport, with independent scrolling for long sidebar lists, memory text, and graph content; mobile layouts return to normal document flow.
+
 ### Relationship graph
 
 CORDHISK generates graph data dynamically from the parsed metadata. Nodes represent memories, CHOs, and CHO metadata values; edges show their relationships. In Memory view, the graph centres on the selected memory and its linked CHOs. In CHO view, it centres on the selected CHO and its related memories. Graph nodes are navigable, making the graph a visual route into the same Memory and CHO views rather than a separate data model.
+
+The graph viewBox is calculated from generated node positions, so large relationship graphs are not clipped. The metadata detail box remains above the graph, action controls remain below it, and hovering or clicking a metadata node locates or selects the corresponding memory annotation.
 
 ## 6. Memory and CHO management
 

@@ -36,6 +36,8 @@ Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's deve
 - Export Memory and CHO metadata as downloadable RDF/XML.
 - Switch between Memories, CHO records, and Metadata views while retaining the active Metadata Space.
 - Compare, report, and build Memory/CHO and Memory/Field matrices using only the active Metadata Space.
+- Start from an instruction summary, with fixed viewport-height workspace panels and internal scrolling for long memories and graphs.
+- Hover graph metadata nodes to locate their highlighted text and click them to select the matching left-panel tag.
 
 ## Data storage
 
@@ -54,6 +56,8 @@ Field,Description
 Creator,Person responsible for creating the memory
 Date,Date associated with the memory
 ```
+
+The interface uses a solid, warm, color-blind-friendly palette. The sidebar, central graph, and right memory panel adapt to the browser viewport; long content scrolls inside its panel instead of expanding the whole page.
 
 ## Development
 

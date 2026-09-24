@@ -113,19 +113,11 @@ def _normalize_text(text):
   return text
 
 def _extract_memory_block_metadata(text):
-    from services.metadata import COMBINED_RE
-
-    pattern = r'===\s*MEMORY METADATA START\s*===(.*?)===\s*MEMORY METADATA END\s*==='
-    match = re.search(pattern, text or "", re.DOTALL)
-    metadata = {}
-
-    if match:
-        block = match.group(1)
-        for m in COMBINED_RE.finditer(block):
-            if m.group("type") == "memory":
-                metadata[m.group("field")] = m.group("value")
-
-    return metadata
+  return {
+    item["field"]: item["value"]
+    for item in extract_metadata(text or "")
+    if item.get("type") == MetadataType.MEMORY.value
+  }
 
 def _memory_txt_path(mid):
     safe_mid = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(mid or "")).strip("_")
@@ -317,8 +309,6 @@ def _load_context(memory_id=None, focus_cho=None, metadata_space=None):
 
     if memory_id is not None:
       selected_memory = session.get(Memory, memory_id)
-    elif memories:
-        selected_memory = memories[0]
 
     if selected_memory is not None:
         recognized_fields = None
@@ -429,6 +419,10 @@ def _graph_download_name(selected_memory, selected_cho_details):
   if selected_memory is not None:
     return selected_memory.title or selected_memory.custom_id or f"memory-{selected_memory.id}"
   return "cordhisk-graph"
+
+
+def _graph_height(nodes):
+  return max(700, max((float(node.get("y", 0)) for node in nodes), default=0) + 100)
 
 
 def _build_metadata_cache(memories, metadata_space=None):
@@ -562,7 +556,7 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
   cho_base_y = {}
   active_cho_refs = None
 
-  def add_node(node_id, label, group, x, y, link, radius=32, parent_id="", details="", memory_owner_id=""):
+  def add_node(node_id, label, group, x, y, link, radius=32, parent_id="", details="", memory_owner_id="", metadata_field="", metadata_value=""):
     if node_id not in seen_nodes:
       seen_nodes[node_id] = {
         "id": node_id,
@@ -575,6 +569,8 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
         "parent_id": parent_id,
         "details": details,
         "memory_owner_id": memory_owner_id,
+        "metadata_field": metadata_field,
+        "metadata_value": metadata_value,
       }
       nodes.append(seen_nodes[node_id])
     elif memory_owner_id:
@@ -703,6 +699,8 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
           f"cho:{cho.custom_id or cho.id}",
           f"{metadata_label}: {md.get('value', '')}",
           f"memory:{memory.id}",
+          field_name,
+          str(md.get("value", "")),
         )
         add_edge(memory_node, metadata_node)
         add_edge(metadata_node, cho_node)
@@ -797,10 +795,10 @@ def _find_cho(cho_id):
     cho_text = str(cho_id or "").strip()
     if not cho_text:
         return None
-    for cho in session.query(CHO).order_by(CHO.id):
-        if str(cho.custom_id) == cho_text or str(cho.id) == cho_text:
-            return cho
-    return None
+    cho = session.query(CHO).filter(CHO.custom_id == cho_text).first()
+    if cho is not None:
+      return cho
+    return session.get(CHO, int(cho_text)) if cho_text.isdigit() else None
 
 
 def _get_id(obj):
@@ -1063,6 +1061,7 @@ def create_app(testing=False):
       memory_metadata_items = []
       cho_metadata_items = []
     nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
+    graph_height = _graph_height(nodes)
     selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
     return render_template_string(
       HTML_TEMPLATE,
@@ -1083,6 +1082,7 @@ def create_app(testing=False):
       filter_cho=filter_cho,
       memory_coordinates=_memory_coordinate_values(selected_memory),
       graph_download_name=_graph_download_name(selected_memory, selected_cho_details),
+      graph_height=graph_height,
       focus_memory=f"memory:{memory_id}" if memory_id else "",
       selected_cho_details=selected_cho_details,
       notice_level=notice_level,
@@ -1096,6 +1096,7 @@ def create_app(testing=False):
       compare_view=compare_view,
       compare_cho=compare_cho,
       is_metadata_management=workspace in {"metadata_spaces", "metadata_space_create"},
+      graph_page=False,
     )
 
   @app.route("/memories/import", methods=["GET", "POST"])
@@ -1559,6 +1560,7 @@ def create_app(testing=False):
     selected_annotation_cho = str(flask_session.get("annotation_cho", ""))
     memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho, metadata_space)
     nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
+    graph_height = _graph_height(nodes)
     selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
     return render_template_string(
       HTML_TEMPLATE,
@@ -1578,6 +1580,7 @@ def create_app(testing=False):
       filter_cho=filter_cho,
       memory_coordinates=_memory_coordinate_values(selected_memory),
       graph_download_name=_graph_download_name(selected_memory, selected_cho_details),
+      graph_height=graph_height,
       focus_memory=f"memory:{memory_id}" if memory_id else "",
       selected_cho_details=selected_cho_details,
       notice_level=request.args.get("notice_level", "").strip() or "success",
@@ -1588,6 +1591,7 @@ def create_app(testing=False):
       workspace_url="",
       workspace_title="",
       is_metadata_management=False,
+      graph_page=True,
     )
 
   @app.route("/search")
@@ -1746,20 +1750,17 @@ def create_app(testing=False):
   def export_compare_report_csv():
     selected_cho = request.args.get("cho_id", "").strip()
     metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
-    recognized_fields = _recognized_metadata_fields(metadata_space)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(("Metadata field", "Metadata instance", "Number of instances", "Related memories"))
 
     if selected_cho:
       report_values = {}
-      for memory in session.query(Memory).order_by(Memory.id):
+      memories = session.query(Memory).order_by(Memory.id).all()
+      metadata_by_memory_id = _build_metadata_cache(memories, metadata_space)
+      for memory in memories:
         memory_label = memory.custom_id or str(memory.id)
-        for md in extract_metadata(
-          memory.text or "",
-          metadata_space=metadata_space.name,
-          recognized_fields=recognized_fields,
-        ):
+        for md in metadata_by_memory_id.get(memory.id, []):
           if md.get("type") != MetadataType.CHO.value or str(md.get("cho")) != selected_cho:
             continue
           field = md.get("field", "")

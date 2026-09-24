@@ -8,28 +8,28 @@ HTML_TEMPLATE = """
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
       :root {
-        --bg: #f2f6f8;
-        --ink: #1b1f24;
-        --brand: #0072b2;
-        --brand-2: #009e73;
-        --surface: #ffffff;
-        --line: #cfd8df;
-        --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        --bg: #fff7ed;
+        --ink: #2b2118;
+        --brand: #b45309;
+        --brand-2: #007c76;
+        --surface: #fffdf8;
+        --line: #d9c8b8;
+        --shadow: 0 8px 24px rgba(91, 57, 30, 0.12);
       }
-      body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: radial-gradient(circle at 10% 10%, #f9fbfc 0%, var(--bg) 52%, #e8eef2 100%); color: var(--ink); }
-      .shell { display: grid; grid-template-columns: 450px 1fr; min-height: 100vh; }
-      .sidebar { position: relative; background: linear-gradient(180deg, #0f3b5a 0%, #0d5660 100%); color: white; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+      body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+      .shell { display: grid; grid-template-columns: 450px 1fr; height: 100vh; height: 100dvh; min-height: 0; align-items: stretch; overflow: hidden; }
+      .sidebar { position: relative; background: #7c2d12; color: white; padding: 20px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; box-sizing: border-box; overflow: hidden; }
       .app-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
       .sidebar h2 { margin: 0; }
       .sidebar-subtitle { margin: 0 0 10px; font-size: 14px; }
-      .content { padding: 24px; }
+      .content { height: 100vh; height: 100dvh; min-height: 0; padding: 24px; box-sizing: border-box; overflow: hidden; }
       .card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid rgba(219, 228, 240, 0.7); }
-      a { color: #005b8f; text-decoration: none; }
+      a { color: #0f5b78; text-decoration: none; }
       .pill { display: inline-flex; align-items: center; margin: 3px; padding: 5px 10px; border-radius: 999px; background: #e2e8f0; font-size: 12px; border: 1px solid transparent; }
-      .pill.memory { background: #d8ebf7; color: #005b8f; border-color: #9fcae2; }
-      .pill.cho { background: #d8f1e6; color: #0f6f55; border-color: #9ad7c2; }
-      .pill.add { background: #0072b2; color: white; border-color: #005b8f; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
-      .pill.remove { background: #e69f00; color: #1f2937; border-color: #b77900; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
+      .pill.memory { background: #fde7c3; color: #7c2d12; border-color: #e9ad6e; }
+      .pill.cho { background: #d9f0e8; color: #075e54; border-color: #8bc9b9; }
+      .pill.add { background: #b45309; color: white; border-color: #92400e; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
+      .pill.remove { background: #e69f00; color: #2b2118; border-color: #b77900; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
       .pill.selected { box-shadow: 0 0 0 2px #0f172a inset; }
       .text-view { font-family: inherit; font-size: 14px; line-height: 1.7; white-space: pre-line; }
       .text-view p { margin: 0 0 10px; }
@@ -41,8 +41,8 @@ HTML_TEMPLATE = """
       .nav { margin-bottom: 14px; }
       .nav a { color: white; margin-right: 10px; }
       .highlight { padding: 0 2px; border-radius: 4px; color: #111827; }
-      .highlight.memory { background: #fef3c7; }
-      .highlight.cho { background: #bfdbfe; }
+      .highlight.memory { background: #f9d98c; }
+      .highlight.cho { background: #a7d8d2; }
       .metadata-panel { margin: 14px 0 18px; }
       .metadata-panel summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
       .metadata-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
@@ -55,10 +55,10 @@ HTML_TEMPLATE = """
       .graph-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
       .graph-toolbar button { padding: 6px 10px; }
       .graph-hover-value { min-height: 32px; display: flex; align-items: center; padding: 6px 10px; border: 1px solid #dbe4f0; border-radius: 8px; background: #f8fafc; color: #334155; font-size: 13px; min-width: 280px; }
-      .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr); gap: 16px; }
-      .graph-card { min-height: 780px; }
-      .graph-shell { overflow: auto; border: 1px solid #dbe4f0; border-radius: 8px; background: white; }
-      svg { width: 100%; min-width: 1000px; height: auto; border: 0; border-radius: 8px; background: white; cursor: grab; }
+      .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr); gap: 16px; height: calc(100vh - 48px); min-height: 0; align-items: stretch; }
+      .graph-card { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+      .graph-shell { flex: 1 1 auto; min-height: 0; overflow: auto; border: 1px solid #d9c8b8; border-radius: 8px; background: #fffdf8; }
+      svg { display: block; width: 100%; min-width: 0; min-height: 100%; height: auto; border: 0; border-radius: 8px; background: #fffdf8; cursor: grab; }
       svg.dragging { cursor: grabbing; }
       .node { stroke: #334155; stroke-width: 1.5; }
       .memory { fill: #d8ebf7; }
@@ -111,15 +111,15 @@ HTML_TEMPLATE = """
       .memory-mode-hide { display: none; }
       .sidebar-list { list-style: none; margin: 0; padding: 0; }
       .sidebar-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-      .sidebar-list a { color: #0f172a; display: inline-block; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sidebar-list a { color: #2b2118; display: inline-block; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .mini-delete { width: 24px; min-width: 24px; height: 24px; line-height: 24px; padding: 0; border-radius: 999px; background: #facc15; color: #1f2937; font-weight: 700; font-size: 14px; }
       .sidebar-action { margin-bottom: 12px; }
       .sidebar-action button { width: 100%; background: #0ea5e9; }
       .sidebar-pop { display: none; margin-top: 8px; padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(148, 163, 184, 0.4); }
       .sidebar-pop label { font-size: 12px; color: #bfdbfe; display: block; margin-bottom: 2px; }
       .sidebar-pop input, .sidebar-pop select { margin-bottom: 8px; }
-      .sidebar-card { background: #f8fbff; }
-      .sidebar-card h3 { color: #0f172a; }
+      .sidebar-card { background: #fffaf2; }
+      .sidebar-card h3 { color: #2b2118; }
       .sidebar-button-grid { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-bottom: 12px; padding: 4px 0; }
       .side-btn, .side-btn:visited { display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; min-height: 30px; box-sizing: border-box; padding: 6px 10px; border-radius: 4px; color: #dbeafe; background: transparent; border: 0; font-size: 13px; font-weight: 600; text-align: left; }
       .side-btn:hover { background: rgba(255, 255, 255, 0.12); color: white; }
@@ -148,9 +148,9 @@ HTML_TEMPLATE = """
       .cho-tag-item.hidden { display: none; }
       .list-selector { display: grid; grid-template-columns: minmax(110px, 1.1fr) repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
       .list-selector button { background: #334155; font-size: 12px; padding: 6px 8px; }
-      .list-selector button.active { background: #0072b2; }
+      .list-selector button.active { background: #b45309; }
       .list-selector .metadata-link { display: flex; align-items: center; justify-content: center; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 5px; background: #334155; color: white; font-size: 12px; text-decoration: none; }
-      .list-selector .metadata-link.active { background: #0072b2; }
+      .list-selector .metadata-link.active { background: #b45309; }
       .list-selector select { width: 100%; min-width: 0; margin: 0; padding: 6px 8px; border: 0; border-radius: 5px; background: #f8fafc; color: #17212b; font-size: 12px; }
       .metadata-management-tools { margin: 0 0 12px; padding: 12px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.5); }
       .metadata-management-tools h3 { margin: 0 0 10px; font-size: 14px; }
@@ -164,8 +164,8 @@ HTML_TEMPLATE = """
       .metadata-management-tools .management-space-list li { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 11px; }
       .metadata-management-tools .management-space-list a { color: #dbeafe; }
       .metadata-management-tools .management-space-list a:hover { color: white; }
-      .workspace-frame { width: 100%; height: calc(100vh - 48px); min-height: 720px; border: 0; border-radius: 8px; background: white; box-shadow: var(--shadow); }
-      .sidebar-list-shell { flex: 0 0 auto; min-height: 180px; max-height: 64vh; margin-bottom: 12px; }
+      .workspace-frame { width: 100%; height: calc(100vh - 48px); min-height: 0; border: 0; border-radius: 8px; background: white; box-shadow: var(--shadow); }
+      .sidebar-list-shell { flex: 1 1 auto; min-height: 180px; max-height: calc(100dvh - 230px); margin-bottom: 12px; }
       .sidebar-list-shell .list-panel { margin-bottom: 0; height: 100%; overflow-y: auto; }
       .list-panel.hidden { display: none; }
       .inline-annotation-row { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) auto; gap: 8px; align-items: end; }
@@ -178,36 +178,38 @@ HTML_TEMPLATE = """
       .memory-title { margin: 0 0 10px; font-size: 1em; font-weight: 700; }
       .metadata-helper { color: #475569; font-size: 13px; margin: 0 0 8px; }
       .memory-tags-title { color: #1b1f24; }
-      .right-panel { display: flex; flex-direction: column; }
+      .right-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
       .right-panel .metadata-card { order: 1; }
       .right-panel .memory-text-card { order: 2; }
       .right-panel .project-footer-note { order: 3; }
-      .memory-text-card { height: 64vh; display: flex; flex-direction: column; }
+      .memory-text-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
       .memory-text-card form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
       .memory-text-scroll { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
       .project-footer-note {
-        margin-top: 0;
+        margin-top: auto;
         padding-top: 12px;
         font-size: 11px;
         line-height: 1.35;
         color: #475569;
-        border-top: 1px solid #dbe4f0;
+        border-top: 1px solid #d9c8b8;
       }
       @media (max-width: 980px) {
-        .shell { grid-template-columns: 1fr; }
-        .sidebar { border-bottom: 1px solid #334155; }
-        .grid { grid-template-columns: 1fr; }
+        .shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; overflow: visible; }
+        .sidebar { height: auto; min-height: auto; border-bottom: 1px solid #9a3412; }
+        .grid { grid-template-columns: 1fr; height: auto; }
         .metadata-card { position: static; }
         .menu-toggle { display: block; }
         .sidebar-menu.hidden { display: none; }
         .sidebar-button-grid { grid-template-columns: 1fr; }
         .side-btn, .side-btn:visited, .sidebar-button-grid button { width: 100%; }
-        .content { padding: 14px; }
+        .content { height: auto; min-height: 0; padding: 14px; overflow: visible; }
+        .sidebar-list-shell { max-height: none; }
         .card { padding: 12px; }
-        .graph-card { min-height: auto; }
-        svg { min-width: 680px; }
+        .graph-card { height: auto; min-height: auto; }
+        .right-panel { height: auto; min-height: 0; overflow: visible; }
+        svg { min-width: 0; min-height: 0; }
         .inline-annotation-row { grid-template-columns: 1fr; }
-        .memory-text-card { height: auto; }
+        .memory-text-card { min-height: 420px; }
       }
     </style>
   </head>
@@ -216,7 +218,7 @@ HTML_TEMPLATE = """
       <aside class="sidebar">
         <div class="app-heading">
           <button type="button" class="menu-toggle" id="toggle-menu" aria-label="Open menu" title="Open menu">Menu</button>
-          <h2>CORDHISK APP v2.4</h2>
+          <h2>CORDHISK APP v3.0</h2>
         </div>
         <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects (CHO).</p>
         <div class="sidebar-menu hidden" id="sidebar-menu">
@@ -242,7 +244,8 @@ HTML_TEMPLATE = """
         </div>
         <div class="list-selector">
           <form method="get" action="/" style="display: contents;">
-            {% if selected_memory %}<input type="hidden" name="memory_id" value="{{ selected_memory.id }}">{% endif %}
+            {% if selected_memory and not focus_cho %}<input type="hidden" name="memory_id" value="{{ selected_memory.id }}">{% endif %}
+            {% if focus_cho %}<input type="hidden" name="focus_cho" value="{{ focus_cho }}">{% endif %}
             {% if workspace %}<input type="hidden" name="workspace" value="{{ workspace }}">{% endif %}
             <select name="metadata_space" aria-label="Metadata Space" onchange="this.form.submit()">
               {% for space in metadata_spaces %}<option value="{{ space.name }}" {% if active_metadata_space and active_metadata_space.name == space.name %}selected{% endif %}>{{ space.name }}</option>{% endfor %}
@@ -358,7 +361,7 @@ HTML_TEMPLATE = """
                     {% for md in cho_metadata_items %}
                     <label class="tag-selector cho-tag-item" data-cho-id="{{ md.cho }}" data-cho-label="{{ md.label }}">
                       <input type="checkbox" name="delete_cho_metadata[{{ md.index }}]" value="1">
-                      <span class="pill cho cho-tag-link" data-cho-tag-index="{{ md.index }}">{{ md.label }} / {{ md.label_field }}: {{ md.value }}</span>
+                      <span class="pill cho cho-tag-link" data-cho-tag-index="{{ md.index }}" data-metadata-field="{{ md.field }}" data-metadata-value="{{ md.value }}">{{ md.label }} / {{ md.label_field }}: {{ md.value }}</span>
                     </label>
                     {% else %}
                     <span class="pill cho">No CHO metadata</span>
@@ -380,31 +383,31 @@ HTML_TEMPLATE = """
         {% endif %}
         {% if workspace_url %}
         <iframe class="workspace-frame" src="{{ workspace_url }}" title="{{ workspace_title }}"></iframe>
-        {% elif selected_memory %}
+        {% elif selected_memory or focus_cho or graph_page %}
         <div class="grid">
           <div class="card graph-card">
-            <div class="graph-toolbar">
-              <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
-              <button type="button" id="zoom-out" aria-label="Zoom out">-</button>
-              <button type="button" id="reset-view">Reset</button>
-              <button type="button" id="download-graph">Download SVG</button>
-              <button type="button" id="download-graph-png">Download PNG</button>
-              <div id="graph-hover-value" class="graph-hover-value">Hover CHO or metadata nodes to inspect values.</div>
-            </div>
+            <div id="graph-hover-value" class="graph-hover-value">Hover CHO or metadata nodes to inspect values.</div>
             <div class="graph-shell">
-              <svg id="graph-svg" viewBox="0 0 1000 700" role="img" aria-label="Memory and CHO graph">
+                <svg id="graph-svg" viewBox="0 0 1000 {{ graph_height }}" role="img" aria-label="Memory and CHO graph">
                 <g id="graph-content">
                   {% for edge in edges %}
                   <line x1="{{ edge[0].x }}" y1="{{ edge[0].y }}" x2="{{ edge[1].x }}" y2="{{ edge[1].y }}" data-from-id="{{ edge[0].id }}" data-to-id="{{ edge[1].id }}" stroke="#94a3b8" stroke-width="2"></line>
                   {% endfor %}
                   {% for node in nodes %}
                   <a href="{{ node.link }}">
-                    <circle class="graph-node node {{ node.group }} {% if node.id == ('cho:' ~ focus_cho) or node.id == focus_memory %}focused{% endif %} {% if node.group in ['memory_metadata','cho_metadata'] %}metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" data-details="{{ node.details or '' }}" title="{{ node.details or '' }}" cx="{{ node.x }}" cy="{{ node.y }}" r="{{ node.radius or 32 }}"></circle>
+                    <circle class="graph-node node {{ node.group }} {% if node.id == ('cho:' ~ focus_cho) or node.id == focus_memory %}focused{% endif %} {% if node.group in ['memory_metadata','cho_metadata'] %}metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" data-metadata-field="{{ node.metadata_field or '' }}" data-metadata-value="{{ node.metadata_value or '' }}" data-details="{{ node.details or '' }}" title="{{ node.details or '' }}" cx="{{ node.x }}" cy="{{ node.y }}" r="{{ node.radius or 32 }}"></circle>
                     <text class="label {% if node.group in ['memory_metadata','cho_metadata'] %}graph-metadata-label metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" x="{{ node.x }}" y="{{ node.y + 6 }}" text-anchor="middle">{{ node.label }}</text>
                   </a>
                   {% endfor %}
                 </g>
               </svg>
+            </div>
+            <div class="graph-toolbar">
+              <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+              <button type="button" id="zoom-out" aria-label="Zoom out">-</button>
+              <button type="button" id="reset-view">Reset</button>
+              <button type="button" id="download-graph">Download SVG</button>
+              <button type="button" id="download-graph-png">Download PNG</button>
             </div>
           </div>
           <div class="right-panel">
@@ -488,6 +491,13 @@ HTML_TEMPLATE = """
         <div class="card">
           {% if panel == 'chos' %}
           <p>Select a CHO to start</p>
+          {% elif panel == 'memories' %}
+          <p>Select a memory to start</p>
+          {% elif not panel and not workspace_url %}
+          <h2>Welcome to CORDHISK App v3.0</h2>
+          <p>Select a memory or CHO from the left panel to begin.</p>
+          <p>Use the Metadata switch to choose the scheme used to interpret, create, and compare annotations.</p>
+          <p>Use Compare / Report from the menu to inspect metadata across memories.</p>
           {% else %}
           <p>Select a memory to start</p>
           {% endif %}
@@ -1230,13 +1240,56 @@ HTML_TEMPLATE = """
             setHoverValue(initiallyVisibleMetadataNode.getAttribute('data-details'));
           }
 
+          const scrollToMetadataHighlight = (node) => {
+            if (!source || !node || !node.matches('.graph-node[data-node-type="cho_metadata"]')) {
+              return;
+            }
+            const field = (node.getAttribute('data-metadata-field') || '').split('@')[0];
+            const value = (node.getAttribute('data-metadata-value') || '').trim();
+            const target = Array.from(source.querySelectorAll('.highlight'))
+              .find((span) => (span.getAttribute('title') || '') === field && (span.textContent || '').trim() === value);
+            if (!target) {
+              return;
+            }
+            const sourceBounds = source.getBoundingClientRect();
+            const targetBounds = target.getBoundingClientRect();
+            source.scrollTo({
+              top: source.scrollTop + targetBounds.top - sourceBounds.top - (source.clientHeight - targetBounds.height) / 2,
+              behavior: 'smooth',
+            });
+          };
+
+          const selectMetadataTag = (node) => {
+            if (!node || !node.matches('.graph-node[data-node-type="cho_metadata"]')) {
+              return;
+            }
+            const field = node.getAttribute('data-metadata-field') || '';
+            const value = (node.getAttribute('data-metadata-value') || '').trim();
+            const tag = Array.from(document.querySelectorAll('.cho-tag-link[data-metadata-field]'))
+              .find((item) => item.getAttribute('data-metadata-field') === field && (item.getAttribute('data-metadata-value') || '').trim() === value);
+            if (!tag) {
+              return;
+            }
+            const checkbox = tag.closest('.tag-selector')?.querySelector('input[type="checkbox"]');
+            if (!checkbox) {
+              return;
+            }
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          };
+
           const nodeElements = Array.from(document.querySelectorAll('.graph-node'));
           nodeElements.forEach((node) => {
             node.addEventListener('mouseenter', function () {
               setHoverValue(node.getAttribute('data-details'));
+              scrollToMetadataHighlight(node);
             });
             node.addEventListener('click', function (event) {
               const nodeType = node.getAttribute('data-node-type');
+              if (nodeType === 'cho_metadata') {
+                event.preventDefault();
+                selectMetadataTag(node);
+              }
               if (nodeType === 'cho' || nodeType === 'memory') {
                 setHoverValue(node.getAttribute('data-details'));
               }
@@ -1269,9 +1322,9 @@ METADATA_SPACES_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Medatata Spaces Management</title>
     <style>
-      :root { --ink: #17212b; --muted: #61717f; --line: #d8e1e8; --surface: #ffffff; --wash: #eef5f7; --brand: #075985; --accent: #0f766e; }
+      :root { --ink: #2b2118; --muted: #6b5b4d; --line: #d9c8b8; --surface: #fffdf8; --wash: #fff7ed; --brand: #b45309; --accent: #007c76; }
       * { box-sizing: border-box; }
-      body { margin: 0; color: var(--ink); font-family: "Avenir Next", "Segoe UI", sans-serif; background: linear-gradient(135deg, #eef5f7, #dfecef); }
+      body { margin: 0; color: var(--ink); font-family: "Avenir Next", "Segoe UI", sans-serif; background: var(--wash); }
       .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
       .topbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
       h1, h2, h3, p { margin-top: 0; }
@@ -1390,7 +1443,7 @@ SEARCH_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Search memories</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
       .wrap { max-width: 980px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form input { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
@@ -1400,7 +1453,7 @@ SEARCH_TEMPLATE = """
       th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
       .snippet { color: #475569; }
       .pagination { margin-top: 10px; display: flex; gap: 12px; align-items: center; }
-      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #1d4ed8; color: white; }
+      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #b45309; color: white; }
     </style>
   </head>
   <body>
@@ -1459,7 +1512,7 @@ COMPARE_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Compare CHO metadata</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
       .wrap { max-width: 980px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form select { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
@@ -1469,7 +1522,7 @@ COMPARE_TEMPLATE = """
       th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
       .matrix th:first-child, .matrix td:first-child { min-width: 170px; font-weight: 600; background: #f8fafc; }
       .matrix-wrap { overflow: auto; }
-      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #1d4ed8; color: white; }
+      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #b45309; color: white; }
       .field-name { border-bottom: 1px dotted #94a3b8; cursor: help; }
       .field-help { margin-left: 6px; color: #64748b; font-size: 12px; cursor: help; }
       .view-toggle { display: flex; gap: 12px; margin-bottom: 12px; }
@@ -1637,7 +1690,7 @@ MAP_TEMPLATE = """
     <title>Memory map - CORDHISK</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
-      :root { --ink: #1b1f24; --brand: #0072b2; --surface: #ffffff; --line: #cfd8df; --bg: #f2f6f8; }
+      :root { --ink: #2b2118; --brand: #b45309; --surface: #fffdf8; --line: #d9c8b8; --bg: #fff7ed; }
       body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
       .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
       .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
@@ -1714,7 +1767,7 @@ IMPORT_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Import memory</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
       .wrap { max-width: 760px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form input, form textarea { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
