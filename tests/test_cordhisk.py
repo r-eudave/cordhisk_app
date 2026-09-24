@@ -21,7 +21,7 @@ class WebAppTests(unittest.TestCase):
     def test_index_shows_import_cta_and_delete_confirmations(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Import TXT memory', response.data)
+        self.assertIn(b'>.txt</a>', response.data)
         self.assertIn(b"confirm('Delete this CHO and remove its tags from all memories?')", response.data)
 
     def test_add_cho_metadata_dialog_removed(self):
@@ -422,7 +422,8 @@ class WebAppTests(unittest.TestCase):
             expected_label = f'{cho_id} (Penico)'.encode()
             self.assertIn(f'<option value="{cho_id}">'.encode() + expected_label + b'</option>', response.data)
             self.assertIn(b'data-cho-label="' + expected_label + b'"', response.data)
-            self.assertIn(b'>' + expected_label + b'</text>', response.data)
+            self.assertIn(b'>' + cho_id.encode() + b'</tspan>', response.data)
+            self.assertIn(b'>' + b'Penico' + b'</tspan>', response.data)
         finally:
             session.delete(memory)
             session.delete(cho)

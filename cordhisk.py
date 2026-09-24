@@ -556,11 +556,13 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
   cho_base_y = {}
   active_cho_refs = None
 
-  def add_node(node_id, label, group, x, y, link, radius=32, parent_id="", details="", memory_owner_id="", metadata_field="", metadata_value=""):
+  def add_node(node_id, label, group, x, y, link, radius=32, parent_id="", details="", memory_owner_id="", metadata_field="", metadata_value="", label_top="", label_bottom=""):
     if node_id not in seen_nodes:
       seen_nodes[node_id] = {
         "id": node_id,
         "label": label,
+        "label_top": label_top,
+        "label_bottom": label_bottom,
         "group": group,
         "x": x,
         "y": y,
@@ -655,6 +657,11 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
       36,
       "",
       memory.custom_id or str(memory.id),
+      "",
+      "",
+      "",
+      memory.custom_id or str(memory.id),
+      memory.title or f"Memory {memory.id}",
     )
 
     metadata_items = metadata_by_memory_id.get(memory.id, [])
@@ -683,6 +690,11 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
           36,
           "",
           f"{cho_label}: {display_field} = {md.get('value', '')}",
+          "",
+          "",
+          "",
+          str(cho.custom_id or cho.id),
+          str(cho.title or ""),
         )
         metadata_label = display_field
         position_key = (cho_key, field_name or "metadata", str(md.get("value", "")))
@@ -1063,12 +1075,12 @@ def create_app(testing=False):
       "import": ("/memories/import?embedded=1", "Import TXT memory"),
       "search": ("/search?embedded=1", "Search memories"),
       "map": ("/map?embedded=1", "Map memories"),
-      "compare": ("/compare?embedded=1", "Compare and Report"),
+      "compare": ("/compare?embedded=1&view=report", "Report"),
       "metadata_spaces": ("/metadata-spaces?embedded=1", "Metadata Spaces Management"),
       "metadata_space_create": ("/metadata-spaces?embedded=1&edit=new", "Create Metadata Space"),
     }
     workspace_url, workspace_title = workspace_routes.get(workspace, ("", ""))
-    compare_view = request.args.get("view", "").strip().lower() or flask_session.get("compare_view", "compare")
+    compare_view = request.args.get("view", "").strip().lower() or flask_session.get("compare_view", "report")
     compare_cho = request.args.get("cho_id", "").strip() or flask_session.get("compare_cho", "")
     if workspace == "compare":
       if request.args.get("view", "").strip():
@@ -1093,12 +1105,6 @@ def create_app(testing=False):
       edit_name = request.args.get("edit", "new").strip() or "new"
       workspace_url = f"/metadata-spaces?embedded=1&edit={quote(edit_name)}"
     memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho, metadata_space)
-    if panel in {"memories", "chos"}:
-      selected_memory = None
-      metadata = []
-      paragraphs = []
-      memory_metadata_items = []
-      cho_metadata_items = []
     nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
     graph_height = _graph_height(nodes)
     selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
@@ -1830,6 +1836,59 @@ def create_app(testing=False):
     rdf = _export_memory_rdf_text(memory)
     file_name = f"memory_{memory.custom_id or memory.id}.rdf"
     return _rdf_download_response(rdf, file_name)
+
+  @app.route("/export/memory/<int:memory_id>.csv")
+  def export_memory_csv(memory_id):
+    memory = session.get(Memory, memory_id)
+    if memory is None:
+      return redirect(url_for("index"))
+    metadata_space = get_space(request.args.get("metadata_space", "").strip()) or get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
+    recognized_fields = _recognized_metadata_fields(metadata_space)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(("Metadata field", "Description", "CHO", "Metadata value"))
+    for item in extract_metadata(
+      memory.text or "",
+      metadata_space=metadata_space.name,
+      recognized_fields=recognized_fields,
+    ):
+      field = item.get("field", "")
+      if not field:
+        continue
+      base_field, _ = split_metadata_field(field)
+      description = next(
+        (field_definition.get("description", "") for field_definition in metadata_space.fields
+         if split_metadata_field(str(field_definition.get("name", "")))[0] == base_field),
+        _metadata_description(base_field),
+      )
+      writer.writerow((field, description, item.get("cho") or "", item.get("value", "")))
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = f'attachment; filename="memory_{memory.custom_id or memory.id}_metadata.csv"'
+    return response
+
+  @app.route("/export/memory/<int:memory_id>.txt")
+  def export_memory_txt(memory_id):
+    memory = session.get(Memory, memory_id)
+    if memory is None:
+      return redirect(url_for("index"))
+    match = VERBATIM_BLOCK_RE.search(memory.text or "")
+    content = ""
+    if match:
+      content = re.sub(
+        r'^===\s*MEMORY VERBATIM COPY START\s*===\s*',
+        '',
+        match.group(0),
+        count=1,
+      )
+      content = re.sub(
+        r'===\s*MEMORY VERBATIM COPY END\s*===\s*$',
+        '',
+        content,
+        count=1,
+      ).lstrip("\n").rstrip("\n")
+    response = Response(content + ("\n" if content else ""), mimetype="text/plain; charset=utf-8")
+    response.headers["Content-Disposition"] = f'attachment; filename="memory_{memory.custom_id or memory.id}_verbatim.txt"'
+    return response
 
   @app.route("/export/cho")
   def export_cho_rdf():

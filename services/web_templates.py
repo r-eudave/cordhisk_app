@@ -8,17 +8,17 @@ HTML_TEMPLATE = """
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
       :root {
-        --bg: #fff7ed;
-        --ink: #2b2118;
-        --brand: #b45309;
-        --brand-2: #007c76;
-        --surface: #fffdf8;
-        --line: #d9c8b8;
+        --bg: #eef3f6;
+        --ink: #17212b;
+        --brand: #e69f00;
+        --brand-2: #56b4e9;
+        --surface: #ffffff;
+        --line: #b8c7d1;
         --shadow: 0 8px 24px rgba(91, 57, 30, 0.12);
       }
       body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
       .shell { display: grid; grid-template-columns: 450px 1fr; height: 100vh; height: 100dvh; min-height: 0; align-items: stretch; overflow: hidden; }
-      .sidebar { position: relative; background: #7c2d12; color: white; padding: 20px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; box-sizing: border-box; overflow: hidden; }
+      .sidebar { position: relative; background: #003b5c; color: white; padding: 20px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; box-sizing: border-box; overflow: hidden; }
       .app-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
       .sidebar h2 { margin: 0; }
       .sidebar-subtitle { margin: 0 0 10px; font-size: 14px; }
@@ -26,9 +26,9 @@ HTML_TEMPLATE = """
       .card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid rgba(219, 228, 240, 0.7); }
       a { color: #0f5b78; text-decoration: none; }
       .pill { display: inline-flex; align-items: center; margin: 3px; padding: 5px 10px; border-radius: 999px; background: #e2e8f0; font-size: 12px; border: 1px solid transparent; }
-      .pill.memory { background: #fde7c3; color: #7c2d12; border-color: #e9ad6e; }
-      .pill.cho { background: #d9f0e8; color: #075e54; border-color: #8bc9b9; }
-      .pill.add { background: #b45309; color: white; border-color: #92400e; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
+      .pill.memory { background: #fff1c7; color: #7a4f00; border-color: #e69f00; }
+      .pill.cho { background: #d9f0e8; color: #075e54; border-color: #56b4e9; }
+      .pill.add { background: #e69f00; color: #17212b; border-color: #b87900; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
       .pill.remove { background: #e69f00; color: #2b2118; border-color: #b77900; cursor: pointer; font-weight: 700; min-width: 28px; justify-content: center; }
       .pill.selected { box-shadow: 0 0 0 2px #0f172a inset; }
       .text-view { font-family: inherit; font-size: 14px; line-height: 1.7; white-space: pre-line; }
@@ -52,13 +52,14 @@ HTML_TEMPLATE = """
       .metadata-table input { margin-bottom: 0; }
       .annotation-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
       .annotation-toolbar button { padding: 6px 10px; }
-      .graph-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
-      .graph-toolbar button { padding: 6px 10px; }
-      .graph-hover-value { min-height: 32px; display: flex; align-items: center; padding: 6px 10px; border: 1px solid #dbe4f0; border-radius: 8px; background: #f8fafc; color: #334155; font-size: 13px; min-width: 280px; }
+      .graph-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 12px 0 0; min-height: 28px; }
+      .graph-toolbar button { box-sizing: border-box; height: 28px; padding: 5px 8px; border-radius: 4px; font-family: inherit; font-size: 11px; font-weight: 700; }
+      .graph-hover-value { flex: 0 0 auto; min-width: 0; max-width: 100%; margin: 0; color: #17212b; font-size: 14px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
+      .graph-hover-value::before { content: none; }
       .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr); gap: 16px; height: calc(100vh - 48px); min-height: 0; align-items: stretch; }
       .graph-card { height: 100%; min-height: 0; display: flex; flex-direction: column; }
-      .graph-shell { flex: 1 1 auto; min-height: 0; overflow: auto; border: 1px solid #d9c8b8; border-radius: 8px; background: #fffdf8; }
-      svg { display: block; width: 100%; min-width: 0; min-height: 100%; height: auto; border: 0; border-radius: 8px; background: #fffdf8; cursor: grab; }
+      .graph-shell { flex: 1 1 auto; min-height: 0; margin-top: 0; overflow: auto; border: 1px solid #b8c7d1; border-radius: 8px; background: #ffffff; }
+      svg { display: block; width: 100%; min-width: 0; min-height: 100%; height: auto; border: 0; border-radius: 8px; background: #ffffff; cursor: grab; }
       svg.dragging { cursor: grabbing; }
       .node { stroke: #334155; stroke-width: 1.5; }
       .memory { fill: #d8ebf7; }
@@ -130,6 +131,13 @@ HTML_TEMPLATE = """
       .side-btn:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .side-btn.alt, .side-btn.alt:visited { color: #dbeafe; }
       .side-btn.alt:hover { background: rgba(255, 255, 255, 0.12); color: white; }
+      .contextual-action { display: block; width: 100%; box-sizing: border-box; height: 28px; margin: 0; padding: 5px 8px; border: 1px solid #e69f00; border-radius: 4px; color: #003b5c; background: #ffffff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; text-decoration: none; }
+      .contextual-action:hover { background: #e6f2f8; color: #003b5c; }
+      .contextual-action-row { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; min-height: 28px; flex-wrap: wrap; margin: 12px 0 20px; padding: 0 2px; clear: both; }
+      .contextual-action-row .contextual-action { flex: 1 1 auto; width: auto; margin: 0; }
+      .contextual-label { align-self: center; color: white; font-size: 10px; font-weight: 700; }
+      .memory-controls-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #d9c8b8; }
+      .memory-controls-top .cho-filter-row { margin: 0; }
       .side-btn.disabled { pointer-events: none; opacity: 0.6; }
       .menu-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin: 0; padding: 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 5px; background: rgba(255, 255, 255, 0.1); font-size: 0; }
       .menu-toggle::before { content: "\\2630"; color: white; font-size: 22px; line-height: 1; }
@@ -141,6 +149,7 @@ HTML_TEMPLATE = """
       .workspace-identity { color: #475569; font-size: 13px; font-weight: 600; }
       .rdf-link { display: inline-flex; align-items: center; padding: 5px 8px; border-radius: 5px; background: #dbe8ed; color: #164e63; font-size: 12px; font-weight: 700; text-decoration: none; }
       .rdf-link:hover { background: #c5dce4; color: #0f3d4c; }
+      .export-label { color: #6b5b4d; font-size: 10px; font-weight: 700; }
       .selection-value { font-style: italic; font-weight: 700; }
       .cho-tags-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
       .cho-tags-head h4 { margin: 0; }
@@ -148,16 +157,16 @@ HTML_TEMPLATE = """
       .cho-tags-head .toggle-cho-tags[aria-expanded="false"] { background: #64748b; }
       .cho-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
       .cho-filter-row label { font-size: 12px; color: #475569; }
-      .cho-filter-row select { margin-bottom: 0; }
+      .cho-filter-row select { width: auto; min-width: 120px; margin: 0; padding: 6px 8px; border: 0; border-radius: 5px; background: #f8fafc; color: #17212b; font-size: 12px; }
       .cho-filter-count { font-size: 12px; color: #64748b; white-space: nowrap; }
       .cho-tag-item.hidden { display: none; }
       .list-selector { display: grid; grid-template-columns: minmax(110px, 1.1fr) repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
       .list-selector button { background: #334155; font-size: 12px; padding: 6px 8px; }
-      .list-selector button.active { background: #b45309; }
+      .list-selector button.active { background: #e69f00; color: #17212b; }
       .list-selector .metadata-link { display: flex; align-items: center; justify-content: center; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 5px; background: #334155; color: white; font-size: 12px; text-decoration: none; }
-      .list-selector .metadata-link.active { background: #b45309; }
+      .list-selector .metadata-link.active { background: #e69f00; color: #17212b; }
       .list-selector select { width: 100%; min-width: 0; margin: 0; padding: 6px 8px; border: 0; border-radius: 5px; background: #f8fafc; color: #17212b; font-size: 12px; }
-      .metadata-management-tools { margin: 0 0 12px; padding: 12px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.5); }
+      .metadata-management-tools { margin: 0 0 12px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 8px; background: rgba(0, 59, 92, 0.72); }
       .metadata-management-tools h3 { margin: 0 0 10px; font-size: 14px; }
       .metadata-management-tools .management-action { display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 7px 9px; border-radius: 4px; color: #dbeafe; background: rgba(255, 255, 255, 0.08); font-size: 12px; font-weight: 600; text-align: left; }
       .metadata-management-tools .management-action:hover { background: rgba(255, 255, 255, 0.16); color: white; }
@@ -170,7 +179,7 @@ HTML_TEMPLATE = """
       .metadata-management-tools .management-space-list a { color: #dbeafe; }
       .metadata-management-tools .management-space-list a:hover { color: white; }
       .workspace-frame { width: 100%; height: calc(100vh - 48px); min-height: 0; border: 0; border-radius: 8px; background: white; box-shadow: var(--shadow); }
-      .sidebar-list-shell { flex: 1 1 auto; min-height: 180px; max-height: calc(100dvh - 230px); margin-bottom: 12px; }
+      .sidebar-list-shell { flex: 1 1 0; min-height: 0; max-height: none; margin-bottom: 12px; overflow: hidden; }
       .sidebar-list-shell .list-panel { margin-bottom: 0; height: 100%; overflow-y: auto; }
       .list-panel.hidden { display: none; }
       .inline-annotation-row { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) auto; gap: 8px; align-items: end; }
@@ -182,9 +191,10 @@ HTML_TEMPLATE = """
       .annotation-title { font-weight: 400; }
       .memory-title { margin: 0 0 10px; font-size: 1em; font-weight: 700; }
       .metadata-helper { color: #475569; font-size: 13px; margin: 0 0 8px; }
+      .metadata-section-label { margin: 0 0 6px; color: #6b5b4d; font-size: 11px; font-weight: 700; }
       .cho-report-section { margin-top: 18px; }
       .cho-report-section h5 { margin: 0 0 6px; color: #7c2d12; font-size: 14px; }
-      .cho-report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      .cho-report-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.45; }
       .cho-report-table th, .cho-report-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid #ead9c8; vertical-align: top; }
       .cho-report-table th:first-child { width: 42px; }
       .memory-tags-title { color: #1b1f24; }
@@ -213,7 +223,7 @@ HTML_TEMPLATE = """
         .sidebar-button-grid { grid-template-columns: 1fr; }
         .side-btn, .side-btn:visited, .sidebar-button-grid button { width: 100%; }
         .content { height: auto; min-height: 0; padding: 14px; overflow: visible; }
-        .sidebar-list-shell { max-height: none; }
+        .sidebar-list-shell { min-height: 180px; max-height: none; overflow: visible; }
         .card { padding: 12px; }
         .graph-card { height: auto; min-height: auto; }
         .right-panel { height: auto; min-height: 0; overflow: visible; }
@@ -233,23 +243,9 @@ HTML_TEMPLATE = """
         <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects (CHO).</p>
         <div class="sidebar-menu hidden" id="sidebar-menu">
           <div class="sidebar-button-grid">
-            <a class="side-btn" href="/?workspace=import">Import TXT memory</a>
-            <a class="side-btn" href="/?workspace=search">Search</a>
-            <a class="side-btn" href="/?workspace=map">Map</a>
-            <a class="side-btn" href="/?workspace=compare">Compare / Report</a>
-            <button type="button" class="side-btn alt" id="open-add-cho">Add CHO</button>
-          </div>
-          <div class="sidebar-action">
-            <form id="add-cho-pop" class="sidebar-pop" action="/chos/create" method="post">
-              <label>CHO code</label>
-              <input name="custom_id" placeholder="e.g. PR99" required>
-              <label>Title</label>
-              <input name="title" placeholder="CHO title">
-              {% if selected_memory %}
-              <input type="hidden" name="memory_id" value="{{ selected_memory.id }}">
-              {% endif %}
-              <button type="submit">Create CHO</button>
-            </form>
+            <a class="side-btn" href="/?workspace=search">Search text in memories</a>
+            <a class="side-btn" href="/?workspace=map">Open map for georeferenced memories</a>
+            <a class="side-btn" href="/?workspace=compare">Report</a>
           </div>
         </div>
         <div class="list-selector">
@@ -307,15 +303,26 @@ HTML_TEMPLATE = """
             {% if selected_memory %}
             <div id="memory-tags-panel">
               <div class="cho-tags-head memory-tags-title">
-                <h4>Memory metadata</h4>
               </div>
               <form action="/memories/{{ selected_memory.id }}/edit" method="post" id="memory-metadata-form">
                 <input type="hidden" name="focus_cho" value="{{ focus_cho or '' }}">
                 <input type="hidden" id="inline-edit-field" name="edit_memory_metadata_field" value="">
                 <input type="hidden" id="inline-edit-value" name="edit_memory_metadata_value" value="">
 
+                <div class="memory-controls-top">
+                  <button type="button" class="pill add" id="open-add-memory-tag" title="Add memory metadata">Add</button>
+                  <button type="button" class="pill remove" id="open-edit-memory-id" title="Edit memory identifier">Edit ID</button>
+                  <button type="submit" class="pill remove" name="remove_selected" value="1" title="Remove selected metadata" onclick="return confirm('Remove selected metadata tags?');">Remove</button>
+                  <div class="cho-filter-row">
+                    <select id="cho-tag-filter" name="cho_tag_filter">
+                      <option value="">All CHO</option>
+                    </select>
+                    <span id="cho-tag-count" class="cho-filter-count"></span>
+                  </div>
+                </div>
+
                 <div class="tag-section">
-                  <p class="tag-help">Double-click a memory tag to update its value. Use checkboxes and remove selected tags.</p>
+                  <div class="metadata-section-label">Memory Metadata</div>
                   <div class="tag-list">
                     {% if selected_memory.license %}
                     <label class="tag-selector">
@@ -331,9 +338,6 @@ HTML_TEMPLATE = """
                     {% else %}
                     <span class="pill memory">No memory metadata</span>
                     {% endfor %}
-                    <button type="button" class="pill add" id="open-add-memory-tag" title="Add memory metadata">Add</button>
-                    <button type="button" class="pill remove" id="open-edit-memory-id" title="Edit memory identifier">Edit ID</button>
-                    <button type="submit" class="pill remove" name="remove_selected" value="1" title="Remove selected metadata" onclick="return confirm('Remove selected metadata tags?');">Remove</button>
                   </div>
                 </div>
 
@@ -357,16 +361,7 @@ HTML_TEMPLATE = """
                 <input id="memory-longitude" name="memory_longitude" type="hidden" value="{{ memory_coordinates['wgs84_pos:long'] }}">
 
                 <div class="tag-section">
-                  <div class="cho-tags-head">
-                    <h4>CHO tags in this memory</h4>
-                  </div>
-                  <div class="cho-filter-row">
-                    <label for="cho-tag-filter">Filter CHO</label>
-                    <select id="cho-tag-filter" name="cho_tag_filter">
-                      <option value="">All CHO</option>
-                    </select>
-                    <span id="cho-tag-count" class="cho-filter-count"></span>
-                  </div>
+                  <div class="metadata-section-label">CHO metadata</div>
                   <div class="tag-list cho-tags-list" id="cho-tags-list">
                     {% for md in cho_metadata_items %}
                     <label class="tag-selector cho-tag-item" data-cho-id="{{ md.cho }}" data-cho-label="{{ md.label }}">
@@ -385,6 +380,42 @@ HTML_TEMPLATE = """
             {% endif %}
           </div>
         </div>
+        {% if not focus_cho and panel != 'chos' %}
+        <div class="contextual-action-row">
+          <span class="contextual-label">Import</span>
+          <a class="contextual-action" href="/?workspace=import">.txt</a>
+          <span class="contextual-label">Export</span>
+          {% if selected_memory %}
+          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.rdf">.rdf</a>
+          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.csv?metadata_space={{ active_metadata_space.name }}">.csv</a>
+          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.txt">.txt</a>
+          {% else %}
+          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.rdf</a>
+          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.csv</a>
+          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.txt</a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if panel == 'chos' or focus_cho %}
+        <div class="contextual-action-row">
+          <button type="button" class="contextual-action" id="open-add-cho">Add CHO</button>
+          <span class="contextual-label">Export</span>
+          {% if selected_cho_details %}
+          <a class="contextual-action" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">.rdf</a>
+          <a class="contextual-action" href="/compare/report.csv?cho_id={{ selected_cho_details.label }}&metadata_space={{ active_metadata_space.name }}">.csv</a>
+          {% else %}
+          <a class="contextual-action" href="#" onclick="alert('Select a CHO first.'); return false;">.rdf</a>
+          <a class="contextual-action" href="#" onclick="alert('Select a CHO first.'); return false;">.csv</a>
+          {% endif %}
+        </div>
+        <form id="add-cho-pop" class="sidebar-pop" action="/chos/create" method="post">
+          <label>CHO code</label>
+          <input name="custom_id" placeholder="e.g. PR99" required>
+          <label>Title</label>
+          <input name="title" placeholder="CHO title">
+          <button type="submit">Create CHO</button>
+        </form>
+        {% endif %}
         {% endif %}
       </aside>
       <main class="content">
@@ -406,7 +437,7 @@ HTML_TEMPLATE = """
                   {% for node in nodes %}
                   <a href="{{ node.link }}">
                     <circle class="graph-node node {{ node.group }} {% if node.id == ('cho:' ~ focus_cho) or node.id == focus_memory %}focused{% endif %} {% if node.group in ['memory_metadata','cho_metadata'] %}metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" data-metadata-field="{{ node.metadata_field or '' }}" data-metadata-value="{{ node.metadata_value or '' }}" data-details="{{ node.details or '' }}" title="{{ node.details or '' }}" cx="{{ node.x }}" cy="{{ node.y }}" r="{{ node.radius or 32 }}"></circle>
-                    <text class="label {% if node.group in ['memory_metadata','cho_metadata'] %}graph-metadata-label metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" x="{{ node.x }}" y="{{ node.y + 6 }}" text-anchor="middle">{{ node.label }}</text>
+                    <text class="label {% if node.group in ['memory_metadata','cho_metadata'] %}graph-metadata-label metadata-visible{% endif %}" data-node-id="{{ node.id }}" data-node-type="{{ node.group }}" data-parent-id="{{ node.parent_id or '' }}" data-memory-owner-id="{{ node.memory_owner_id or '' }}" x="{{ node.x }}" y="{{ node.y + 6 }}" text-anchor="middle">{% if node.group in ['memory', 'cho'] and node.label_top %}<tspan x="{{ node.x }}" dy="-7">{{ node.label_top }}</tspan><tspan x="{{ node.x }}" dy="14">{{ node.label_bottom }}</tspan>{% else %}{{ node.label }}{% endif %}</text>
                   </a>
                   {% endfor %}
                 </g>
@@ -424,7 +455,6 @@ HTML_TEMPLATE = """
             {% if not focus_cho %}
             <div class="card memory-text-card">
               <div class="workspace-heading">
-                <a class="rdf-link" href="/export/memory/{{ selected_memory.id }}.rdf">Export RDF</a>
                 <div class="record-identity">
                   <h4 class="memory-title"><span class="record-label">ID:</span> {{ selected_memory.custom_id or selected_memory.id }} <span class="record-label">Name:</span> {{ selected_memory.title or ('Memory ' ~ selected_memory.id) }}</h4>
                 </div>
@@ -472,7 +502,6 @@ HTML_TEMPLATE = """
             <div class="card metadata-card">
               {% if selected_cho_details %}
                 <div class="workspace-heading">
-                  <a class="rdf-link" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">Export RDF</a>
                   <div class="record-identity">
                     <h4><span class="record-label">ID:</span> {{ selected_cho_details.label }} <span class="record-label">Name:</span> {{ selected_cho_details.title }}</h4>
                   </div>
@@ -505,20 +534,16 @@ HTML_TEMPLATE = """
           </div>
         </div>
         {% else %}
+        {% if panel not in ['memories', 'chos'] %}
         <div class="card">
-          {% if panel == 'chos' %}
-          <p>Select a CHO to start</p>
-          {% elif panel == 'memories' %}
-          <p>Select a memory to start</p>
-          {% elif not panel and not workspace_url %}
+          {% if not panel and not workspace_url %}
           <h2>Welcome to CORDHISK App v3.0</h2>
           <p>Select a memory or CHO from the left panel to begin.</p>
           <p>Use the Metadata switch to choose the scheme used to interpret, create, and compare annotations.</p>
-          <p>Use Compare / Report from the menu to inspect metadata across memories.</p>
-          {% else %}
-          <p>Select a memory to start</p>
+          <p>Use Report from the menu to inspect metadata across memories.</p>
           {% endif %}
         </div>
+        {% endif %}
         {% endif %}
       </main>
     </div>
@@ -1066,11 +1091,11 @@ HTML_TEMPLATE = """
           };
           {% if is_metadata_management %}
           setVisualization(showMetadataBtn);
-          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); window.location.href = '/'; });
-          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); window.location.href = '/?panel=chos'; });
+          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); window.location.href = '{% if memories %}/?memory_id={{ memories[0].id }}{% else %}/{% endif %}'; });
+          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); window.location.href = '{% if chos %}/?focus_cho={{ chos[0].custom_id or chos[0].id }}{% else %}/{% endif %}'; });
           {% else %}
-          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); window.location.href = '/?panel=memories'; });
-          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); window.location.href = '/?panel=chos'; });
+          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); selectList('memories'); });
+          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); selectList('chos'); });
           showMetadataBtn.addEventListener('click', function () { setVisualization(showMetadataBtn); });
           {% endif %}
         }
@@ -1339,7 +1364,7 @@ METADATA_SPACES_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Medatata Spaces Management</title>
     <style>
-      :root { --ink: #2b2118; --muted: #6b5b4d; --line: #d9c8b8; --surface: #fffdf8; --wash: #fff7ed; --brand: #b45309; --accent: #007c76; }
+      :root { --ink: #17212b; --muted: #4f6472; --line: #b8c7d1; --surface: #ffffff; --wash: #eef3f6; --brand: #003b5c; --accent: #e69f00; }
       * { box-sizing: border-box; }
       body { margin: 0; color: var(--ink); font-family: "Avenir Next", "Segoe UI", sans-serif; background: var(--wash); }
       .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
@@ -1456,17 +1481,17 @@ SEARCH_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Search memories</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
+      body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: #eef3f6; color: #17212b; }
       .wrap { max-width: 980px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form input { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
-      button { padding: 8px 12px; border: 0; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
-      a { color: #2563eb; text-decoration: none; }
+      button { padding: 6px 10px; border: 0; border-radius: 4px; background: #003b5c; color: white; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+      a { color: #0f5b78; text-decoration: none; }
       table { width: 100%; border-collapse: collapse; }
       th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
       .snippet { color: #475569; }
       .pagination { margin-top: 10px; display: flex; gap: 12px; align-items: center; }
-      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #b45309; color: white; }
+      .back-btn { display: inline-block; padding: 6px 10px; border-radius: 4px; background: #003b5c; color: white; font-size: 12px; font-weight: 700; }
     </style>
   </head>
   <body>
@@ -1523,19 +1548,19 @@ COMPARE_TEMPLATE = """
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Compare CHO metadata</title>
+    <title>CHO metadata report</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
+      body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: #eef3f6; color: #17212b; }
       .wrap { max-width: 980px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form select { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
-      button { padding: 8px 12px; border: 0; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
-      a { color: #2563eb; text-decoration: none; }
+      button { padding: 6px 10px; border: 0; border-radius: 4px; background: #003b5c; color: white; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+      a { color: #0f5b78; text-decoration: none; }
       table { width: 100%; border-collapse: collapse; }
       th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
       .matrix th:first-child, .matrix td:first-child { min-width: 170px; font-weight: 600; background: #f8fafc; }
       .matrix-wrap { overflow: auto; }
-      .back-btn { display: inline-block; padding: 8px 12px; border-radius: 6px; background: #b45309; color: white; }
+      .back-btn { display: inline-block; padding: 6px 10px; border-radius: 4px; background: #003b5c; color: white; font-size: 12px; font-weight: 700; }
       .field-name { border-bottom: 1px dotted #94a3b8; cursor: help; }
       .field-help { margin-left: 6px; color: #64748b; font-size: 12px; cursor: help; }
       .view-toggle { display: flex; gap: 12px; margin-bottom: 12px; }
@@ -1547,14 +1572,14 @@ COMPARE_TEMPLATE = """
       .report-instance { width: 65%; }
       .report-memories { width: 30%; }
       .memory-links a + a::before { content: ", "; color: #64748b; }
-      .download-btn { display: inline-block; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; background: #047857; color: white; }
+      .download-btn { display: inline-block; margin-bottom: 12px; padding: 6px 10px; border-radius: 4px; background: #e69f00; color: #17212b; font-size: 12px; font-weight: 700; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="card">
-        <h1>Compare by CHO</h1>
-        <p>Compare metadata fields across memories for one CHO, with each memory shown as a column.</p>
+        <h1>Report by CHO</h1>
+        <p>Review metadata fields, instances, counts, and related memories for one CHO.</p>
       </div>
       <div class="card">
         <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top"{% endif %}>
@@ -1568,8 +1593,6 @@ COMPARE_TEMPLATE = """
             {% endfor %}
           </select>
           <div class="view-toggle">
-            <label><input type="radio" name="view" value="compare" {% if view == 'compare' %}checked{% endif %}> Compare</label>
-            <label><input type="radio" name="view" value="report" {% if view == 'report' %}checked{% endif %}> Report</label>
             <label><input type="radio" name="view" value="matrix" {% if view == 'matrix' %}checked{% endif %}> Memory/CHO matrix</label>
             <label><input type="radio" name="view" value="fields" {% if view == 'fields' %}checked{% endif %}> Memory/Field matrix</label>
           </div>
@@ -1703,7 +1726,7 @@ MAP_TEMPLATE = """
     <title>Memory map - CORDHISK</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
-      :root { --ink: #2b2118; --brand: #b45309; --surface: #fffdf8; --line: #d9c8b8; --bg: #fff7ed; }
+      :root { --ink: #17212b; --brand: #003b5c; --surface: #ffffff; --line: #b8c7d1; --bg: #eef3f6; }
       body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
       .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
       .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
@@ -1780,12 +1803,12 @@ IMPORT_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Import memory</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #fff7ed; color: #2b2118; }
+      body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: #eef3f6; color: #17212b; }
       .wrap { max-width: 760px; margin: 32px auto; padding: 24px; }
       .card { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
       form input, form textarea { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
-      button { padding: 8px 12px; border: 0; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; }
-      a { color: #2563eb; text-decoration: none; }
+      button { padding: 6px 10px; border: 0; border-radius: 4px; background: #003b5c; color: white; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+      a { color: #0f5b78; text-decoration: none; }
       .status-msg { display: none; }
     </style>
   </head>
