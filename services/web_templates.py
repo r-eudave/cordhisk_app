@@ -19,7 +19,8 @@ HTML_TEMPLATE = """
       body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: radial-gradient(circle at 10% 10%, #f9fbfc 0%, var(--bg) 52%, #e8eef2 100%); color: var(--ink); }
       .shell { display: grid; grid-template-columns: 450px 1fr; min-height: 100vh; }
       .sidebar { position: relative; background: linear-gradient(180deg, #0f3b5a 0%, #0d5660 100%); color: white; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-      .sidebar h2 { margin: 0 0 4px; }
+      .app-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+      .sidebar h2 { margin: 0; }
       .sidebar-subtitle { margin: 0 0 10px; font-size: 14px; }
       .content { padding: 24px; }
       .card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid rgba(219, 228, 240, 0.7); }
@@ -119,18 +120,22 @@ HTML_TEMPLATE = """
       .sidebar-pop input, .sidebar-pop select { margin-bottom: 8px; }
       .sidebar-card { background: #f8fbff; }
       .sidebar-card h3 { color: #0f172a; }
-      .sidebar-button-grid { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; padding: 4px 0; }
-      .side-btn, .side-btn:visited { display: flex; align-items: center; justify-content: flex-start; width: 100%; min-height: 30px; padding: 6px 10px; border-radius: 4px; color: #dbeafe; background: transparent; border: 0; font-size: 13px; font-weight: 600; text-align: left; }
+      .sidebar-button-grid { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-bottom: 12px; padding: 4px 0; }
+      .side-btn, .side-btn:visited { display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; min-height: 30px; box-sizing: border-box; padding: 6px 10px; border-radius: 4px; color: #dbeafe; background: transparent; border: 0; font-size: 13px; font-weight: 600; text-align: left; }
       .side-btn:hover { background: rgba(255, 255, 255, 0.12); color: white; }
-      .side-btn.alt { background: transparent; color: #bbf7d0; }
+      .side-btn.alt, .side-btn.alt:visited { color: #dbeafe; }
       .side-btn.alt:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .side-btn.disabled { pointer-events: none; opacity: 0.6; }
-      .menu-toggle { display: block; width: 100%; margin-bottom: 10px; background: #0072b2; }
+      .menu-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin: 0; padding: 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 5px; background: rgba(255, 255, 255, 0.1); font-size: 0; }
+      .menu-toggle::before { content: "\\2630"; color: white; font-size: 22px; line-height: 1; }
       .menu-toggle.active { background: #009e73; }
-      .sidebar-menu { position: absolute; top: 86px; left: 20px; right: 20px; z-index: 20; padding: 10px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.98); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28); }
+      .sidebar-menu { position: absolute; top: 72px; left: 20px; right: 20px; z-index: 20; padding: 10px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.98); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28); }
       .sidebar-menu.hidden { display: none; }
-      .menu-close { display: block; margin: 0 0 6px auto; padding: 2px 8px; background: transparent; color: #bfdbfe; font-size: 12px; }
-      .menu-close:hover { background: rgba(255, 255, 255, 0.12); color: white; }
+      .workspace-heading { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+      .workspace-heading h4 { margin: 0; }
+      .workspace-identity { color: #475569; font-size: 13px; font-weight: 600; }
+      .rdf-link { display: inline-flex; align-items: center; padding: 5px 8px; border-radius: 5px; background: #dbe8ed; color: #164e63; font-size: 12px; font-weight: 700; text-decoration: none; }
+      .rdf-link:hover { background: #c5dce4; color: #0f3d4c; }
       .selection-value { font-style: italic; font-weight: 700; }
       .cho-tags-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
       .cho-tags-head h4 { margin: 0; }
@@ -141,11 +146,25 @@ HTML_TEMPLATE = """
       .cho-filter-row select { margin-bottom: 0; }
       .cho-filter-count { font-size: 12px; color: #64748b; white-space: nowrap; }
       .cho-tag-item.hidden { display: none; }
-      .list-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+      .list-selector { display: grid; grid-template-columns: minmax(110px, 1.1fr) repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
       .list-selector button { background: #334155; font-size: 12px; padding: 6px 8px; }
       .list-selector button.active { background: #0072b2; }
-      .list-selector .menu-toggle { width: auto; margin: 0; background: #0072b2; }
-      .list-selector .menu-toggle.active { background: #009e73; }
+      .list-selector .metadata-link { display: flex; align-items: center; justify-content: center; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 5px; background: #334155; color: white; font-size: 12px; text-decoration: none; }
+      .list-selector .metadata-link.active { background: #0072b2; }
+      .list-selector select { width: 100%; min-width: 0; margin: 0; padding: 6px 8px; border: 0; border-radius: 5px; background: #f8fafc; color: #17212b; font-size: 12px; }
+      .metadata-management-tools { margin: 0 0 12px; padding: 12px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.5); }
+      .metadata-management-tools h3 { margin: 0 0 10px; font-size: 14px; }
+      .metadata-management-tools .management-action { display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 7px 9px; border-radius: 4px; color: #dbeafe; background: rgba(255, 255, 255, 0.08); font-size: 12px; font-weight: 600; text-align: left; }
+      .metadata-management-tools .management-action:hover { background: rgba(255, 255, 255, 0.16); color: white; }
+      .metadata-management-tools form { margin: 0 0 10px; }
+      .metadata-management-tools .metadata-import-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+      .metadata-management-tools input[type="file"] { width: 100%; min-width: 0; margin: 0; color: #dbeafe; font-size: 11px; }
+      .metadata-management-tools button { width: auto; max-width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 4px; background: #dbe8ed; color: #164e63; font-size: 12px; font-weight: 700; }
+      .metadata-management-tools .management-space-list { margin: 8px 0 0; padding: 0; list-style: none; }
+      .metadata-management-tools .management-space-list li { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 11px; }
+      .metadata-management-tools .management-space-list a { color: #dbeafe; }
+      .metadata-management-tools .management-space-list a:hover { color: white; }
+      .workspace-frame { width: 100%; height: calc(100vh - 48px); min-height: 720px; border: 0; border-radius: 8px; background: white; box-shadow: var(--shadow); }
       .sidebar-list-shell { flex: 0 0 auto; min-height: 180px; max-height: 64vh; margin-bottom: 12px; }
       .sidebar-list-shell .list-panel { margin-bottom: 0; height: 100%; overflow-y: auto; }
       .list-panel.hidden { display: none; }
@@ -195,22 +214,18 @@ HTML_TEMPLATE = """
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <h2>CORDHISK APP v2.4</h2>
+        <div class="app-heading">
+          <button type="button" class="menu-toggle" id="toggle-menu" aria-label="Open menu" title="Open menu">Menu</button>
+          <h2>CORDHISK APP v2.4</h2>
+        </div>
         <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects (CHO).</p>
         <div class="sidebar-menu hidden" id="sidebar-menu">
-          <button type="button" class="menu-close" id="close-menu">Close menu</button>
           <div class="sidebar-button-grid">
-            <a class="side-btn" href="/memories/import">Import TXT memory</a>
-            <a class="side-btn" href="/search">Search</a>
-            <a class="side-btn" href="/map">Map</a>
-            <a class="side-btn" href="/compare">Compare / Report</a>
+            <a class="side-btn" href="/?workspace=import">Import TXT memory</a>
+            <a class="side-btn" href="/?workspace=search">Search</a>
+            <a class="side-btn" href="/?workspace=map">Map</a>
+            <a class="side-btn" href="/?workspace=compare">Compare / Report</a>
             <button type="button" class="side-btn alt" id="open-add-cho">Add CHO</button>
-            <button type="button" class="side-btn alt" id="open-export-cho">Download CHO RDF</button>
-            {% if selected_memory %}
-            <a class="side-btn alt" href="/export/memory/{{ selected_memory.id }}.rdf">Download Memory RDF</a>
-            {% else %}
-            <span class="side-btn alt disabled">Download Memory RDF</span>
-            {% endif %}
           </div>
           <div class="sidebar-action">
             <form id="add-cho-pop" class="sidebar-pop" action="/chos/create" method="post">
@@ -224,31 +239,32 @@ HTML_TEMPLATE = """
               <button type="submit">Create CHO</button>
             </form>
           </div>
-          <div class="sidebar-action">
-            <form id="export-cho-pop" class="sidebar-pop" action="/export/cho" method="get">
-              <label>CHO</label>
-              <select name="cho_id" required>
-                {% for cho in chos %}
-                <option value="{{ cho.custom_id or cho.id }}">{{ cho.title or cho.custom_id or cho.id }}</option>
-                {% endfor %}
-              </select>
-              <label>Mode</label>
-              <select name="mode">
-                <option value="single">Single memory</option>
-                <option value="all">All memories</option>
-              </select>
-              {% if selected_memory %}
-              <input type="hidden" name="memory_id" value="{{ selected_memory.id }}">
-              {% endif %}
-              <button type="submit">Download</button>
-            </form>
-          </div>
         </div>
         <div class="list-selector">
-          <button type="button" class="menu-toggle" id="toggle-menu">Menu</button>
-          <button type="button" id="show-memories-btn" class="active">Memories</button>
-          <button type="button" id="show-chos-btn">CHO records</button>
+          <form method="get" action="/" style="display: contents;">
+            {% if selected_memory %}<input type="hidden" name="memory_id" value="{{ selected_memory.id }}">{% endif %}
+            {% if workspace %}<input type="hidden" name="workspace" value="{{ workspace }}">{% endif %}
+            <select name="metadata_space" aria-label="Metadata Space" onchange="this.form.submit()">
+              {% for space in metadata_spaces %}<option value="{{ space.name }}" {% if active_metadata_space and active_metadata_space.name == space.name %}selected{% endif %}>{{ space.name }}</option>{% endfor %}
+            </select>
+          </form>
+          <button type="button" id="show-memories-btn" class="{% if not focus_cho and panel != 'chos' and not is_metadata_management %}active{% endif %}">Memories</button>
+          <button type="button" id="show-chos-btn" class="{% if (focus_cho or panel == 'chos') and not is_metadata_management %}active{% endif %}">CHO records</button>
+          <a class="metadata-link{% if is_metadata_management %} active{% endif %}" id="show-metadata-btn" href="/?workspace=metadata_spaces&metadata_space={{ active_metadata_space.name }}">Metadata</a>
         </div>
+        {% if is_metadata_management %}
+        <div class="metadata-management-tools">
+          <h3>Metadata Spaces</h3>
+          <a class="management-action" href="/?workspace=metadata_space_create">Create Metadata Space</a>
+          <a class="management-action" href="/?workspace=metadata_space_create&edit={{ active_metadata_space.name }}">See and edit current</a>
+          <a class="management-action" href="/metadata-spaces/{{ active_metadata_space.name }}.csv">Download current</a>
+          <form class="metadata-import-form" action="/metadata-spaces/import" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv,text/csv" required>
+            <button type="submit">Import CSV</button>
+          </form>
+        </div>
+        {% endif %}
+        {% if not is_metadata_management %}
         <div class="sidebar-list-shell">
           <div class="card sidebar-card list-panel" id="memories-panel">
             <ul class="sidebar-list">
@@ -297,7 +313,7 @@ HTML_TEMPLATE = """
                     {% for md in memory_metadata_items %}
                     <label class="tag-selector">
                       <input type="checkbox" name="delete_memory_metadata[{{ md.field }}]" value="1">
-                      <span class="pill memory memory-editable" data-memory-field="{{ md.field }}" data-memory-value="{{ md.value }}">{{ md.field }}: {{ md.value }}</span>
+                      <span class="pill memory memory-editable" data-memory-field="{{ md.field }}" data-memory-value="{{ md.value }}">{{ md.label }}: {{ md.value }}</span>
                     </label>
                     {% else %}
                     <span class="pill memory">No memory metadata</span>
@@ -315,7 +331,7 @@ HTML_TEMPLATE = """
                     <option value="__license__">License</option>
                     <option value="__coordinates__">Coordinates</option>
                     {% for field in memory_fields %}
-                    <option value="{{ field.field }}">{{ field.label }} ({{ field.field }})</option>
+                    <option value="{{ field.field }}">{{ field.label }}</option>
                     {% endfor %}
                   </select>
                   <label>Value</label>
@@ -342,7 +358,7 @@ HTML_TEMPLATE = """
                     {% for md in cho_metadata_items %}
                     <label class="tag-selector cho-tag-item" data-cho-id="{{ md.cho }}" data-cho-label="{{ md.label }}">
                       <input type="checkbox" name="delete_cho_metadata[{{ md.index }}]" value="1">
-                      <span class="pill cho cho-tag-link" data-cho-tag-index="{{ md.index }}">{{ md.label }} / {{ md.field }}: {{ md.value }}</span>
+                      <span class="pill cho cho-tag-link" data-cho-tag-index="{{ md.index }}">{{ md.label }} / {{ md.label_field }}: {{ md.value }}</span>
                     </label>
                     {% else %}
                     <span class="pill cho">No CHO metadata</span>
@@ -356,12 +372,15 @@ HTML_TEMPLATE = """
             {% endif %}
           </div>
         </div>
+        {% endif %}
       </aside>
       <main class="content">
         {% if notice_message %}
         <div class="status-msg" aria-hidden="true">{{ notice_message }}</div>
         {% endif %}
-        {% if selected_memory %}
+        {% if workspace_url %}
+        <iframe class="workspace-frame" src="{{ workspace_url }}" title="{{ workspace_title }}"></iframe>
+        {% elif selected_memory %}
         <div class="grid">
           <div class="card graph-card">
             <div class="graph-toolbar">
@@ -391,7 +410,10 @@ HTML_TEMPLATE = """
           <div class="right-panel">
             {% if not focus_cho %}
             <div class="card memory-text-card">
-              <h4 class="memory-title">Memory content</h4>
+              <div class="workspace-heading">
+                <a class="rdf-link" href="/export/memory/{{ selected_memory.id }}.rdf">Export RDF</a>
+                <h4 class="memory-title">{{ selected_memory.custom_id or selected_memory.id }} — {{ selected_memory.title or ('Memory ' ~ selected_memory.id) }}</h4>
+              </div>
               <form action="/memories/{{ selected_memory.id }}/annotate" method="post" id="memory-annotation-form">
                 <p class="annotation-title metadata-helper">Annotate highlighted memory text</p>
                 <div class="annotation-toolbar">
@@ -403,7 +425,7 @@ HTML_TEMPLATE = """
                     <label>CHO</label>
                     <select name="annotation_cho">
                       {% for cho in chos %}
-                      <option value="{{ cho.custom_id or cho.id }}">{{ cho.custom_id or cho.id }}{% if cho.title %} ({{ cho.title }}){% endif %}</option>
+                      <option value="{{ cho.custom_id or cho.id }}"{% if selected_annotation_cho == (cho.custom_id or cho.id|string) %} selected{% endif %}>{{ cho.custom_id or cho.id }}{% if cho.title %} ({{ cho.title }}){% endif %}</option>
                       {% endfor %}
                     </select>
                   </div>
@@ -422,7 +444,7 @@ HTML_TEMPLATE = """
                 </div>
                 <div id="annotation-source" class="text-view memory-text-scroll" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; user-select: text;">
                   {% for paragraph in paragraphs %}
-                  <p>{% for part in paragraph %}{% if part.type == 'text' %}{{ part.value }}{% else %}<span class="highlight {{ part.kind }}" title="{{ part.field }}"{% if part.cho_tag_index is not none %} data-cho-tag-index="{{ part.cho_tag_index }}"{% endif %}>{{ part.value }}</span>{% endif %}{% endfor %}</p>
+                  <p>{% for part in paragraph %}{% if part.type == 'text' %}{{ part.value }}{% else %}<span class="highlight {{ part.kind }}" title="{{ part.display_field }}"{% if part.cho_tag_index is not none %} data-cho-tag-index="{{ part.cho_tag_index }}"{% endif %}>{{ part.value }}</span>{% endif %}{% endfor %}</p>
                   {% endfor %}
                 </div>
                 <input id="selected-annotation-text" name="selected_annotation_text" type="hidden">
@@ -438,14 +460,17 @@ HTML_TEMPLATE = """
             {% if focus_cho %}
             <div class="card metadata-card">
               {% if selected_cho_details %}
-                <h4>CHO {{ selected_cho_details.label }} — {{ selected_cho_details.title }}</h4>
+                <div class="workspace-heading">
+                  <a class="rdf-link" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">Export RDF</a>
+                  <h4>CHO {{ selected_cho_details.label }} — {{ selected_cho_details.title }}</h4>
+                </div>
                 <p class="metadata-helper">Metadata grouped by memory for the selected CHO.</p>
                 {% for group in selected_cho_details.memories %}
                 <div class="cho-memory-group">
                   <p><strong><a href="/?memory_id={{ group.memory_id }}&filter_cho={{ selected_cho_details.label }}">{{ group.memory_label }}</a></strong></p>
                   <div class="tag-list">
                     {% for tag in group.tags %}
-                    <span class="pill cho">{{ tag.field }}: {{ tag.value }}</span>
+                    <span class="pill cho">{{ tag.display_field }}: {{ tag.value }}</span>
                     {% endfor %}
                   </div>
                 </div>
@@ -461,7 +486,11 @@ HTML_TEMPLATE = """
         </div>
         {% else %}
         <div class="card">
-          <p>Select a memory from the left to see its content and extracted metadata.</p>
+          {% if panel == 'chos' %}
+          <p>Select a CHO to start</p>
+          {% else %}
+          <p>Select a memory to start</p>
+          {% endif %}
         </div>
         {% endif %}
       </main>
@@ -522,7 +551,6 @@ HTML_TEMPLATE = """
         const memoryAnnotationForm = document.getElementById('memory-annotation-form');
         const addChoTagBox = document.getElementById('add-cho-tag-box');
         const menuToggleButton = document.getElementById('toggle-menu');
-        const closeMenuButton = document.getElementById('close-menu');
         const sidebarMenu = document.getElementById('sidebar-menu');
         const svg = document.getElementById('graph-svg');
         const graphContent = document.getElementById('graph-content');
@@ -543,13 +571,12 @@ HTML_TEMPLATE = """
         const inlineEditValue = document.getElementById('inline-edit-value');
         const openAddCho = document.getElementById('open-add-cho');
         const addChoPop = document.getElementById('add-cho-pop');
-        const openExportCho = document.getElementById('open-export-cho');
-        const exportChoPop = document.getElementById('export-cho-pop');
         const openEditMemoryId = document.getElementById('open-edit-memory-id');
         const memoryIdDialog = document.getElementById('memory-id-dialog');
         const cancelMemoryId = document.getElementById('cancel-memory-id');
         const showMemoriesBtn = document.getElementById('show-memories-btn');
         const showChosBtn = document.getElementById('show-chos-btn');
+        const showMetadataBtn = document.getElementById('show-metadata-btn');
         const memoriesPanel = document.getElementById('memories-panel');
         const chosPanel = document.getElementById('chos-panel');
         const tagsPanel = document.getElementById('tags-panel');
@@ -780,9 +807,6 @@ HTML_TEMPLATE = """
             const open = menuToggleButton.classList.toggle('active');
             sidebarMenu.classList.toggle('hidden', !open);
           });
-          if (closeMenuButton) {
-            closeMenuButton.addEventListener('click', closeMenu);
-          }
           document.addEventListener('click', function (event) {
             if (!sidebarMenu.classList.contains('hidden')
               && !sidebarMenu.contains(event.target)
@@ -886,13 +910,6 @@ HTML_TEMPLATE = """
           openAddCho.addEventListener('click', function () {
             const open = addChoPop.style.display === 'block';
             addChoPop.style.display = open ? 'none' : 'block';
-          });
-        }
-
-        if (openExportCho && exportChoPop) {
-          openExportCho.addEventListener('click', function () {
-            const open = exportChoPop.style.display === 'block';
-            exportChoPop.style.display = open ? 'none' : 'block';
           });
         }
 
@@ -1005,12 +1022,29 @@ HTML_TEMPLATE = """
           };
           showMemoriesBtn.addEventListener('click', function () { selectList('memories'); });
           showChosBtn.addEventListener('click', function () { selectList('chos'); });
-          {% if focus_cho %}
+          {% if panel == 'chos' or focus_cho %}
           selectList('chos');
           {% elif selected_memory %}
           selectList('tags');
           {% else %}
           selectList('memories');
+          {% endif %}
+        }
+
+        if (showMemoriesBtn && showChosBtn && showMetadataBtn) {
+          const setVisualization = function (activeButton) {
+            [showMemoriesBtn, showChosBtn, showMetadataBtn].forEach(function (button) {
+              button.classList.toggle('active', button === activeButton);
+            });
+          };
+          {% if is_metadata_management %}
+          setVisualization(showMetadataBtn);
+          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); window.location.href = '/'; });
+          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); window.location.href = '/?panel=chos'; });
+          {% else %}
+          showMemoriesBtn.addEventListener('click', function () { setVisualization(showMemoriesBtn); window.location.href = '/?panel=memories'; });
+          showChosBtn.addEventListener('click', function () { setVisualization(showChosBtn); window.location.href = '/?panel=chos'; });
+          showMetadataBtn.addEventListener('click', function () { setVisualization(showMetadataBtn); });
           {% endif %}
         }
 
@@ -1227,6 +1261,127 @@ HTML_TEMPLATE = """
 </html>
 """
 
+METADATA_SPACES_TEMPLATE = """
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Medatata Spaces Management</title>
+    <style>
+      :root { --ink: #17212b; --muted: #61717f; --line: #d8e1e8; --surface: #ffffff; --wash: #eef5f7; --brand: #075985; --accent: #0f766e; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); font-family: "Avenir Next", "Segoe UI", sans-serif; background: linear-gradient(135deg, #eef5f7, #dfecef); }
+      .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
+      .topbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 6px; font-size: clamp(1.6rem, 3vw, 2.35rem); }
+      h2 { margin-bottom: 6px; font-size: 1.15rem; }
+      .intro { max-width: 680px; color: var(--muted); margin-bottom: 0; }
+      .back-link { color: var(--brand); font-weight: 700; }
+      .layout { display: grid; grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr); gap: 18px; align-items: start; }
+      .embedded-page .layout { grid-template-columns: minmax(0, 1fr); }
+      .embedded-page .panel { width: 100%; min-height: calc(100vh - 170px); }
+      .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 26px rgba(23, 33, 43, .08); padding: 18px; }
+      .scheme-list { display: grid; gap: 8px; margin: 14px 0 0; }
+      .scheme-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #f8fbfc; }
+      .scheme-row strong { display: block; }
+      .scheme-row small { color: var(--muted); }
+      .scheme-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+      .button, button { border: 0; border-radius: 5px; padding: 8px 11px; color: white; background: var(--brand); cursor: pointer; font: inherit; font-size: .86rem; font-weight: 700; text-decoration: none; }
+      .button.secondary, button.secondary { color: var(--ink); background: #dbe8ed; }
+      .button.accent, button.accent { background: var(--accent); }
+      label { display: block; margin: 12px 0 5px; color: var(--muted); font-size: .8rem; font-weight: 700; }
+      input, textarea { width: 100%; border: 1px solid #c4d1d9; border-radius: 5px; padding: 9px; color: var(--ink); background: white; font: inherit; }
+      textarea { min-height: 74px; resize: vertical; }
+      .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+      .form-grid .full { grid-column: 1 / -1; }
+      .field-head, .field-row { display: grid; grid-template-columns: minmax(130px, .8fr) minmax(180px, 1.2fr) auto; gap: 8px; align-items: end; }
+      .field-head { margin-top: 16px; color: var(--muted); font-size: .8rem; font-weight: 700; }
+      .field-row { margin-top: 6px; }
+      .field-row label { margin-top: 0; }
+      .remove-field { background: #b45309; padding-inline: 10px; }
+      .form-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+      .notice { margin-bottom: 16px; padding: 10px 12px; border-radius: 5px; background: #dcfce7; color: #166534; }
+      .error { background: #fee2e2; color: #991b1b; }
+      .import-box { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+      @media (max-width: 760px) { .topbar, .layout { display: block; } .back-link { display: inline-block; margin-top: 12px; } .panel + .panel { margin-top: 16px; } .form-grid, .metadata-import-form { display: block; } .metadata-import-form input[type="file"] { margin-bottom: 6px; } .metadata-import-form button { width: 100%; } .field-head { display: none; } .field-row { grid-template-columns: 1fr; padding: 10px 0; border-bottom: 1px solid var(--line); } }
+    </style>
+  </head>
+  <body>
+    <main class="page{% if embedded %} embedded-page{% endif %}">
+      <header class="topbar">
+        <div><h1>Medatata Spaces Management</h1><p class="intro">Check, edit, import, and download the metadata schemes available to CORDHISK.</p></div>
+      </header>
+      {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
+      {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+      <div class="layout">
+        {% if not embedded %}
+        <section class="panel">
+          <h2>Existing Metadata Spaces</h2>
+          <p class="intro">Download a scheme as CSV or load it into the editor.</p>
+          <div class="scheme-list">
+            {% for space in spaces %}
+            <div class="scheme-row">
+              <div><strong>{{ space.name }}</strong><small>{{ space.description }}</small></div>
+              <div class="scheme-actions"><a class="button secondary" href="/metadata-spaces/{{ space.name }}.csv">Download</a><a class="button" href="/metadata-spaces?edit={{ space.name }}">Edit</a></div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="import-box">
+            <h2>Import CSV</h2>
+            <form class="metadata-import-form" action="/metadata-spaces/import" method="post" enctype="multipart/form-data">
+              <input type="file" name="file" accept=".csv,text/csv" required>
+              <div class="form-actions"><button class="accent" type="submit">Import Metadata Space</button></div>
+            </form>
+          </div>
+        </section>
+        {% endif %}
+        <section class="panel">
+          <h2>{{ "Edit Metadata Space" if editing else "Create Metadata Space" }}</h2>
+          <form id="metadata-space-form" method="post" action="/metadata-spaces"{% if embedded %} target="_top"{% endif %}>
+            <input type="hidden" name="original_name" value="{{ editing.name if editing else "" }}">
+            <input type="hidden" name="replace" value="1">
+            <div class="form-grid">
+              <div><label for="space-name">Scheme name</label><input id="space-name" name="name" value="{{ editing.name if editing else "" }}" required></div>
+              <div><label for="space-author">Author</label><input id="space-author" name="author" value="{{ editing.author if editing else "" }}" required></div>
+              <div><label for="space-date">Date of update</label><input id="space-date" name="updated_at" value="{{ editing.updated_at if editing else "" }}" required></div>
+              <div class="full"><label for="space-description">Description</label><textarea id="space-description" name="description" required>{{ editing.description if editing else "" }}</textarea></div>
+            </div>
+            <div class="field-head"><span>Field</span><span>Description</span><span></span></div>
+            <div id="field-list">
+              {% set form_fields = editing.fields if editing else [{"name": "", "description": ""}] %}
+              {% for field in form_fields %}
+              <div class="field-row"><input name="field_name" value="{{ field.name }}" placeholder="Field name" required><input name="field_description" value="{{ field.description }}" placeholder="Field description" required><button class="remove-field" type="button" title="Remove field">Remove</button></div>
+              {% endfor %}
+            </div>
+            <div class="form-actions"><button class="secondary" id="add-field" type="button">Add field</button><button type="submit">Save Metadata Space</button></div>
+          </form>
+        </section>
+      </div>
+    </main>
+    <script>
+      const fieldList = document.getElementById('field-list');
+      const addField = document.getElementById('add-field');
+      const metadataSpaceForm = document.getElementById('metadata-space-form');
+      function bindRemove(button) { button.addEventListener('click', function () { if (fieldList.children.length > 1) button.parentElement.remove(); }); }
+      document.querySelectorAll('.remove-field').forEach(bindRemove);
+      addField.addEventListener('click', function () { const row = document.createElement('div'); row.className = 'field-row'; row.innerHTML = '<input name="field_name" placeholder="Field name" required><input name="field_description" placeholder="Field description" required><button class="remove-field" type="button" title="Remove field">Remove</button>'; fieldList.appendChild(row); bindRemove(row.querySelector('.remove-field')); });
+      if (metadataSpaceForm && window.top !== window) {
+        metadataSpaceForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          const action = new URL(metadataSpaceForm.action, window.location.href);
+          action.searchParams.set('embedded', '1');
+          fetch(action, { method: 'POST', body: new FormData(metadataSpaceForm), redirect: 'follow' })
+            .then(function (response) { window.top.location.href = response.url; })
+            .catch(function () { window.top.location.href = '/?workspace=metadata_spaces'; });
+        });
+      }
+    </script>
+  </body>
+</html>
+"""
+
 SEARCH_TEMPLATE = """
 <!doctype html>
 <html lang="en">
@@ -1253,7 +1408,6 @@ SEARCH_TEMPLATE = """
       <div class="card">
         <h1>Search memories</h1>
         <p>This mirrors the desktop search flow across memory text.</p>
-        <a class="back-btn" href="/">Back to main page</a>
       </div>
       <div class="card">
         <form method="get" action="/search">
@@ -1335,10 +1489,11 @@ COMPARE_TEMPLATE = """
       <div class="card">
         <h1>Compare by CHO</h1>
         <p>Compare metadata fields across memories for one CHO, with each memory shown as a column.</p>
-        <a class="back-btn" href="/">Back to main page</a>
       </div>
       <div class="card">
-        <form method="get" action="/compare">
+        <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top"{% endif %}>
+          {% if embedded %}<input type="hidden" name="workspace" value="compare">{% endif %}
+          <input type="hidden" name="metadata_space" value="{{ metadata_space.name }}">
           <label>CHO</label>
           <select name="cho_id">
             <option value="">Choose CHO</option>
@@ -1417,10 +1572,10 @@ COMPARE_TEMPLATE = """
       <div class="card">
         <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for CHO <a href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
         {% if view == 'report' %}
-        <a class="download-btn" href="/compare/report.csv?cho_id={{ selected_cho }}">Download CSV</a>
+        <a class="download-btn" href="/compare/report.csv?cho_id={{ selected_cho }}&metadata_space={{ metadata_space.name }}">Download CSV</a>
         {% for section in report_sections %}
         <section class="report-section">
-          <h3><span class="field-name" title="{{ field_descriptions.get(section.field, section.field) }}">{{ section.field }}</span></h3>
+          <h3><span class="field-name" title="{{ field_descriptions.get(section.field, section.field) }}">{{ section.display_field }}</span></h3>
           <table class="report-table">
             <thead><tr><th class="report-count">N</th><th class="report-instance">Instance</th><th class="report-memories">Related memories</th></tr></thead>
             <tbody>
@@ -1452,7 +1607,7 @@ COMPARE_TEMPLATE = """
               {% for row in matrix_rows %}
               <tr>
                 <td>
-                  <span class="field-name" title="{{ field_descriptions.get(row.field, row.field) }}">{{ row.field }}</span>
+                  <span class="field-name" title="{{ field_descriptions.get(row.field, row.field) }}">{{ row.display_field }}</span>
                   <span class="field-help" title="{{ field_descriptions.get(row.field, row.field) }}">i</span>
                 </td>
                 {% for memory in memory_columns %}
@@ -1505,7 +1660,6 @@ MAP_TEMPLATE = """
           <h1>Memory map</h1>
           <p>Explore memories with stored WGS84 coordinates.</p>
         </div>
-        <a class="back-link" href="/">Back to main page</a>
       </div>
       {% if markers %}
       <div id="memory-map" class="map" role="application" aria-label="Map of memories with coordinates"></div>
@@ -1577,10 +1731,10 @@ IMPORT_TEMPLATE = """
       <div class="card">
         <h1>Import a new memory</h1>
         <p>Upload a text file and assign the initial memory metadata before the memory becomes available in the web app.</p>
-        <a href="/">Back to dashboard</a>
       </div>
       <div class="card">
-        <form action="/memories/import" method="post" enctype="multipart/form-data">
+        <form action="/memories/import" method="post" enctype="multipart/form-data"{% if embedded and import_ready %} target="_top"{% endif %}>
+          {% if embedded %}<input type="hidden" name="embedded" value="1">{% endif %}
           {% if not import_ready %}
           <input type="hidden" name="stage" value="prepare">
           <label>Text file</label>

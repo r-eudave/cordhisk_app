@@ -1,3 +1,4 @@
+import json
 import os
 from sqlalchemy import create_engine, Column, Integer, String, Text, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -28,6 +29,29 @@ class Memory(Base):
     text = Column(Text)
     file_path = Column(String)
     license = Column(String)
+
+
+class MetadataSpace(Base):
+    __tablename__ = "metadata_spaces"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    author = Column(String, nullable=False, default="")
+    updated_at = Column(String, nullable=False, default="")
+    description = Column(Text, nullable=False, default="")
+    fields_json = Column(Text, nullable=False, default="[]")
+
+    @property
+    def fields(self):
+        try:
+            value = json.loads(self.fields_json or "[]")
+        except (TypeError, ValueError):
+            return []
+        return value if isinstance(value, list) else []
+
+    @fields.setter
+    def fields(self, value):
+        self.fields_json = json.dumps(value or [], ensure_ascii=True)
 
 
 # =========================

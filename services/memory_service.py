@@ -6,6 +6,7 @@ from services.metadata import (
     rebuild_text_from_spans
 )
 from services.types import MetadataType
+from services.metadata import without_verbatim_copy, VERBATIM_BLOCK_RE
 
 
 # =========================
@@ -15,6 +16,7 @@ def clean_text(text):
     if not text:
         return ""
 
+    text = without_verbatim_copy(text)
     text = html.unescape(text)
     text = text.replace("\r\n", "\n").strip()
 
@@ -113,6 +115,7 @@ def rebuild_memory_text(original_text, new_metadata, memory_id=None):
     if memory_id is not None:
         metadata["dc:identifier"] = str(memory_id)
 
+    protected = VERBATIM_BLOCK_RE.search(original_text or "")
     txt = clean_text(original_text)
 
     # remove existing memory block
@@ -136,7 +139,34 @@ def rebuild_memory_text(original_text, new_metadata, memory_id=None):
     # rebuild text
     content = rebuild_text_from_spans(clean, spans).lstrip("\n")
 
-    return block + content
+    rebuilt = block + content
+    if protected:
+        rebuilt = rebuilt.rstrip("\n") + "\n\n" + protected.group(0).rstrip("\n") + "\n"
+    return rebuilt
+
+
+def append_verbatim_copy(text, original_text):
+    if VERBATIM_BLOCK_RE.search(text or ""):
+        return text
+    clean_original = re.sub(
+        r'</?[a-zA-Z][a-zA-Z0-9:_@-]*(?:\s+[^>]*)?>',
+        '',
+        without_verbatim_copy(original_text),
+    )
+    return (
+        (text or "").rstrip("\n")
+        + "\n\n=== MEMORY VERBATIM COPY START ===\n"
+        + clean_original
+        + "\n=== MEMORY VERBATIM COPY END ===\n"
+    )
+
+
+def preserve_verbatim_copy(editable_text, original_text):
+    original_match = VERBATIM_BLOCK_RE.search(original_text or "")
+    editable = without_verbatim_copy(editable_text)
+    if not original_match:
+        return editable
+    return editable.rstrip("\n") + "\n\n" + original_match.group(0).rstrip("\n") + "\n"
 
 def rebuild_from_spans(clean_text, spans):
     from collections import OrderedDict

@@ -6,21 +6,55 @@ from services.types import MetadataType
 # REGEX (REAL TAGS)
 # =========================
 COMBINED_RE = re.compile(
-    r'<(?P<field>[a-zA-Z0-9:_-]+)'
+    r'<(?P<field>[a-zA-Z0-9:_@-]+)'
     r'(?:\s+cho="(?P<cho>[^"]+)"|\s+type="(?P<type>memory)")>'
     r'(?P<value>.*?)</\1>',
     re.DOTALL
 )
 
+VERBATIM_BLOCK_RE = re.compile(
+    r'===\s*MEMORY VERBATIM COPY START\s*===.*?===\s*MEMORY VERBATIM COPY END\s*===\s*',
+    re.DOTALL,
+)
+
+
+def without_verbatim_copy(text):
+    return VERBATIM_BLOCK_RE.sub('', text or '')
+
+
+def split_metadata_field(field):
+    if "@" in field:
+        name, space = field.rsplit("@", 1)
+        return name, space
+    return field, "EDM"
+
+
+def _overlapping_tag_matches(text):
+    for position, character in enumerate(text or ""):
+        if character != "<":
+            continue
+        match = COMBINED_RE.match(text, position)
+        if match:
+            yield match
+
+
+def _clean_metadata_value(value):
+    return re.sub(
+        r'</?[a-zA-Z][a-zA-Z0-9:_@-]*(?:\s+[^>]*)?>',
+        '',
+        value or '',
+    )
+
 
 # =========================
 # PARSE TEXT + SPANS 
 # =========================
-def parse_text_and_spans(text):
+def parse_text_and_spans(text, metadata_space=None, recognized_fields=None):
     if not text:
         return "", []
 
     try:
+        text = without_verbatim_copy(text)
         # =========================
         # STEP 1: Extract memory metadata block
         # =========================
@@ -33,10 +67,13 @@ def parse_text_and_spans(text):
             block = block_match.group(1)
 
             for m in COMBINED_RE.finditer(block):
+                field, space = split_metadata_field(m.group("field"))
+                if metadata_space and (space != metadata_space or (recognized_fields and field not in recognized_fields)):
+                    continue
                 if m.group("type") == "memory":
                     memory_md.append({
                         "field": m.group("field"),
-                        "value": m.group("value"),
+                        "value": _clean_metadata_value(m.group("value")),
                         "type": MetadataType.MEMORY.value
                     })
 
@@ -51,6 +88,11 @@ def parse_text_and_spans(text):
         idx = 0
 
         for m in COMBINED_RE.finditer(text):
+            field, space = split_metadata_field(m.group("field"))
+            if metadata_space and (space != metadata_space or (recognized_fields and field not in recognized_fields)):
+                clean += text[idx:m.start()] + m.group("value")
+                idx = m.end()
+                continue
             start, end = m.span()
 
             clean += text[idx:start]
@@ -64,6 +106,7 @@ def parse_text_and_spans(text):
                 "start": span_start,
                 "end": span_end,
                 "field": m.group("field"),
+                "metadata_space": space,
                 "cho": m.group("cho"),
                 "value": inner,
                 "type": MetadataType.MEMORY.value
@@ -94,6 +137,47 @@ def parse_text_and_spans(text):
 
             spans.append(span)
 
+        residual_tag_pattern = r'</?[a-zA-Z][a-zA-Z0-9:_@-]*(?:\s+[^>]*)?>'
+        if re.search(residual_tag_pattern, clean):
+            clean = re.sub(residual_tag_pattern, '', clean)
+            search_from = 0
+            for span in sorted(spans, key=lambda s: s.get("start", -1)):
+                value = span.get("value", "")
+                if not value:
+                    continue
+                start = clean.find(value, search_from)
+                if start == -1:
+                    span.pop("start", None)
+                    span.pop("end", None)
+                    continue
+                span["start"] = start
+                span["end"] = start + len(value)
+                search_from = span["end"]
+
+        if metadata_space:
+            existing_span_keys = {(span.get("field"), span.get("value")) for span in spans}
+            for match in _overlapping_tag_matches(text):
+                field, space = split_metadata_field(match.group("field"))
+                if space != metadata_space or (recognized_fields and field not in recognized_fields):
+                    continue
+                value = re.sub(residual_tag_pattern, '', match.group("value"))
+                key = (match.group("field"), value)
+                if not value or key in existing_span_keys:
+                    continue
+                start = clean.find(value)
+                if start == -1:
+                    continue
+                spans.append({
+                    "start": start,
+                    "end": start + len(value),
+                    "field": match.group("field"),
+                    "metadata_space": space,
+                    "cho": match.group("cho"),
+                    "value": value,
+                    "type": MetadataType.MEMORY.value if match.group("type") == "memory" else MetadataType.CHO.value,
+                })
+                existing_span_keys.add(key)
+
         spans.sort(key=lambda s: s.get("start", -1))
 
         return clean, spans
@@ -106,9 +190,11 @@ def parse_text_and_spans(text):
 # =========================
 # EXTRACT METADATA 
 # =========================
-def extract_metadata(text):
+def extract_metadata(text, metadata_space=None, recognized_fields=None):
     if not text:
         return []
+
+    text = without_verbatim_copy(text)
 
     metadata = []
 
@@ -123,10 +209,14 @@ def extract_metadata(text):
 
     for block in memory_blocks:
         for m in COMBINED_RE.finditer(block):
+            field, space = split_metadata_field(m.group("field"))
+            if metadata_space and (space != metadata_space or (recognized_fields and field not in recognized_fields)):
+                continue
             metadata.append({
                 "field": m.group("field"),
+                "metadata_space": space,
                 "cho": None,
-                "value": m.group("value"),
+                "value": _clean_metadata_value(m.group("value")),
                 "type": MetadataType.MEMORY.value
             })
 
@@ -144,14 +234,45 @@ def extract_metadata(text):
     # CHO METADATA
     # =========================
     for m in COMBINED_RE.finditer(text_wo_memory):
+        field, space = split_metadata_field(m.group("field"))
+        if metadata_space and (space != metadata_space or (recognized_fields and field not in recognized_fields)):
+            continue
         metadata.append({
             "field": m.group("field"),
+            "metadata_space": space,
             "cho": m.group("cho"),
-            "value": m.group("value"),
+            "value": _clean_metadata_value(m.group("value")),
             "type": MetadataType.CHO.value
         })
 
-    return metadata
+    if metadata_space:
+        seen = {(item.get("field"), item.get("value"), item.get("cho")) for item in metadata}
+        for m in _overlapping_tag_matches(text_wo_memory):
+            field, space = split_metadata_field(m.group("field"))
+            if space != metadata_space or (recognized_fields and field not in recognized_fields):
+                continue
+            value = _clean_metadata_value(m.group("value"))
+            item = (m.group("field"), value, m.group("cho"))
+            if not value or item in seen:
+                continue
+            metadata.append({
+                "field": m.group("field"),
+                "metadata_space": space,
+                "cho": m.group("cho"),
+                "value": value,
+                "type": MetadataType.CHO.value,
+            })
+            seen.add(item)
+
+    deduplicated = []
+    seen = set()
+    for item in metadata:
+        key = (item.get("field"), item.get("cho"), item.get("value"), item.get("type"))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduplicated.append(item)
+    return deduplicated
 
 
 # =========================

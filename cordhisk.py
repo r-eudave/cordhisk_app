@@ -6,16 +6,18 @@ import re
 import tempfile
 import uuid
 import xml.etree.ElementTree as ET
+from urllib.parse import quote
 
-from flask import Flask, Response, redirect, render_template_string, request, url_for
+from flask import Flask, Response, redirect, render_template_string, request, session as flask_session, url_for
 from sqlalchemy import func
 
 from config import APP_DATA_DIR
 from db import CHO, Memory, session
-from services.memory_service import rebuild_memory_text
-from services.metadata import extract_metadata, get_memory_title, parse_text_and_spans
+from services.memory_service import append_verbatim_copy, preserve_verbatim_copy, rebuild_memory_text
+from services.metadata import VERBATIM_BLOCK_RE, extract_metadata, get_memory_title, parse_text_and_spans, split_metadata_field, without_verbatim_copy
 from services.metadata_schema import METADATA_FIELDS
-from services.web_templates import COMPARE_TEMPLATE, HTML_TEMPLATE, IMPORT_TEMPLATE, MAP_TEMPLATE, SEARCH_TEMPLATE
+from services.metadata_spaces import get_space, list_spaces, parse_space_csv, save_space, space_csv
+from services.web_templates import COMPARE_TEMPLATE, HTML_TEMPLATE, IMPORT_TEMPLATE, MAP_TEMPLATE, METADATA_SPACES_TEMPLATE, SEARCH_TEMPLATE
 from services.types import MetadataType
 
 
@@ -47,6 +49,32 @@ MEMORY_FIELDS = [
 ]
 
 
+def _metadata_space_field_options(metadata_space):
+  if metadata_space is None or metadata_space.name == "EDM":
+    return CHO_FIELDS, MEMORY_FIELDS
+
+  options = []
+  for field in metadata_space.fields:
+    name, _ = split_metadata_field(str(field.get("name", "")).strip())
+    if not name:
+      continue
+    options.append({
+      "field": f"{name}@{metadata_space.name}",
+      "label": name.split(":")[-1].replace("_", " ").replace("-", " ").title(),
+    })
+  return options, options
+
+
+def _recognized_metadata_fields(metadata_space):
+  if metadata_space is None or metadata_space.name == "EDM":
+    return None
+  return {
+    split_metadata_field(str(field.get("name", "")).strip())[0]
+    for field in metadata_space.fields
+    if str(field.get("name", "")).strip()
+  }
+
+
 def _metadata_label(field_name):
   if not field_name:
     return "Metadata"
@@ -65,6 +93,16 @@ def _metadata_description(field_name):
     if description:
       return description
   return _metadata_label(field_name)
+
+
+def _graph_metadata_label(field_name):
+  base_field, _ = split_metadata_field(field_name or "")
+  return _metadata_label(base_field)
+
+
+def _display_field_name(field_name):
+  base_field, _ = split_metadata_field(field_name or "")
+  return base_field
 
 
 def _normalize_text(text):
@@ -182,8 +220,13 @@ def _visible_span_to_raw_span(raw_text, visible_start, visible_end):
   return raw_start, raw_end
 
 
-def _build_paragraphs(text):
-    clean_text, spans = parse_text_and_spans(text or "")
+def _build_paragraphs(text, metadata_space=None):
+    recognized_fields = _recognized_metadata_fields(metadata_space)
+    clean_text, spans = parse_text_and_spans(
+        text or "",
+        metadata_space=metadata_space.name if metadata_space else None,
+        recognized_fields=recognized_fields,
+    )
     if not clean_text:
         return []
 
@@ -223,6 +266,7 @@ def _build_paragraphs(text):
                         "value": highlighted_value,
                         "kind": "cho" if is_cho_tag else "memory",
                         "field": span.get("field", ""),
+                        "display_field": _display_field_name(span.get("field", "")),
                         "cho_tag_index": cho_tag_index if is_cho_tag else None,
                     })
                     if is_cho_tag:
@@ -251,7 +295,7 @@ def _remove_nth_cho_tag(text, target_index):
   except (TypeError, ValueError):
     return text
 
-  pattern = re.compile(r'<(?P<field>[a-zA-Z0-9:_-]+)\s+cho="(?P<cho>[^"]+)">(?P<value>.*?)</(?P=field)>', re.DOTALL)
+  pattern = re.compile(r'<(?P<field>[a-zA-Z0-9:_@-]+)\s+cho="(?P<cho>[^"]+)">(?P<value>.*?)</(?P=field)>', re.DOTALL)
   current_index = 0
   for match in pattern.finditer(text):
     if current_index == target_index:
@@ -260,7 +304,7 @@ def _remove_nth_cho_tag(text, target_index):
   return text
 
 
-def _load_context(memory_id=None, focus_cho=None):
+def _load_context(memory_id=None, focus_cho=None, metadata_space=None):
     memories = session.query(Memory).order_by(func.lower(Memory.custom_id), Memory.id).all()
     chos = session.query(CHO).order_by(func.lower(CHO.custom_id), CHO.id).all()
     cho_lookup = _build_cho_lookup(chos)
@@ -277,12 +321,19 @@ def _load_context(memory_id=None, focus_cho=None):
         selected_memory = memories[0]
 
     if selected_memory is not None:
-        metadata = extract_metadata(selected_memory.text or "")
+        recognized_fields = None
+        if metadata_space is not None:
+          recognized_fields = _recognized_metadata_fields(metadata_space)
+        metadata = extract_metadata(
+          selected_memory.text or "",
+          metadata_space=metadata_space.name if metadata_space else None,
+          recognized_fields=recognized_fields,
+        )
         if not selected_memory.title:
             selected_memory.title = get_memory_title(selected_memory.text or "", "Untitled memory")
 
         memory_metadata_items = [
-            {"field": md["field"], "value": md["value"]}
+          {"field": md["field"], "label": _graph_metadata_label(md["field"]), "value": md["value"]}
             for md in metadata
           if md.get("type") == MetadataType.MEMORY.value and md.get("field") not in {"dc:identifier", MEMORY_LICENSE_FIELD}
         ]
@@ -292,6 +343,7 @@ def _load_context(memory_id=None, focus_cho=None):
             "cho": md.get("cho"),
             "label": _cho_display_label(cho_lookup.get(str(md.get("cho")))) or str(md.get("cho")),
             "field": md["field"],
+            "label_field": _graph_metadata_label(md["field"]),
             "value": md["value"],
           }
           for index, md in enumerate(
@@ -299,7 +351,7 @@ def _load_context(memory_id=None, focus_cho=None):
             if md.get("type") == MetadataType.CHO.value and md.get("cho")
           )
         ]
-        paragraphs = _build_paragraphs(selected_memory.text or "")
+        paragraphs = _build_paragraphs(selected_memory.text or "", metadata_space)
 
     return memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, focus_cho
 
@@ -379,8 +431,16 @@ def _graph_download_name(selected_memory, selected_cho_details):
   return "cordhisk-graph"
 
 
-def _build_metadata_cache(memories):
-  return {memory.id: extract_metadata(memory.text or "") for memory in memories}
+def _build_metadata_cache(memories, metadata_space=None):
+  recognized_fields = _recognized_metadata_fields(metadata_space)
+  return {
+    memory.id: extract_metadata(
+      memory.text or "",
+      metadata_space=metadata_space.name if metadata_space else None,
+      recognized_fields=recognized_fields,
+    )
+    for memory in memories
+  }
 
 
 def _build_cho_lookup(cho_rows):
@@ -472,7 +532,7 @@ def _build_memory_field_matrix(memories, metadata_by_memory_id):
   matrix_field_columns = [
     {
       "key": field,
-      "label": _metadata_label(field),
+      "label": _graph_metadata_label(field),
       "total": field_totals[field],
     }
     for field in field_keys
@@ -489,10 +549,10 @@ def _build_memory_field_matrix(memories, metadata_by_memory_id):
   return matrix_field_columns, matrix_field_memory_rows
 
 
-def _build_graph_data(selected_memory_id=None, focus_cho=None):
+def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=None):
   memories = session.query(Memory).order_by(Memory.id).all()
   cho_rows = session.query(CHO).order_by(CHO.id).all()
-  metadata_by_memory_id = _build_metadata_cache(memories)
+  metadata_by_memory_id = _build_metadata_cache(memories, metadata_space)
   cho_lookup = _build_cho_lookup(cho_rows)
   nodes = []
   edges = []
@@ -615,7 +675,7 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None):
         cho_y = cho_base_y.get(cho_key, 140)
         cho_link = f"/?focus_cho={cho.custom_id or cho.id}"
         field_name = md.get("field", "")
-        display_field = _metadata_label(field_name)
+        display_field = _graph_metadata_label(field_name)
         cho_label = _cho_display_label(cho)
         cho_node = add_node(
           f"cho:{cho.custom_id or cho.id}",
@@ -650,7 +710,7 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None):
   return nodes, edges
 
 
-def _build_selected_cho_details(focus_cho):
+def _build_selected_cho_details(focus_cho, metadata_space=None):
   cho = _find_cho(focus_cho)
   if cho is None:
     return None
@@ -660,7 +720,7 @@ def _build_selected_cho_details(focus_cho):
     cho_refs.add(str(cho.custom_id))
 
   memory_rows = session.query(Memory).order_by(Memory.id).all()
-  metadata_by_memory_id = _build_metadata_cache(memory_rows)
+  metadata_by_memory_id = _build_metadata_cache(memory_rows, metadata_space)
   memories = []
 
   for memory in memory_rows:
@@ -669,6 +729,7 @@ def _build_selected_cho_details(focus_cho):
       if md.get("type") == MetadataType.CHO.value and str(md.get("cho")) in cho_refs:
         tags.append({
           "field": md.get("field", ""),
+          "display_field": _graph_metadata_label(md.get("field", "")),
           "value": md.get("value", ""),
         })
 
@@ -952,17 +1013,57 @@ def _redirect_with_notice(endpoint, level, message, **kwargs):
 def create_app(testing=False):
   app = Flask(__name__)
   app.config["TESTING"] = testing
+  app.secret_key = "cordhisk-local-session"
 
   @app.route("/")
   def index():
     memory_id = request.args.get("memory_id", type=int)
     focus_cho = request.args.get("focus_cho", "")
+    panel = request.args.get("panel", "").strip().lower()
     filter_cho = request.args.get("filter_cho", "").strip()
+    workspace = request.args.get("workspace", "").strip().lower()
+    workspace_routes = {
+      "import": ("/memories/import?embedded=1", "Import TXT memory"),
+      "search": ("/search?embedded=1", "Search memories"),
+      "map": ("/map?embedded=1", "Map memories"),
+      "compare": ("/compare?embedded=1", "Compare and Report"),
+      "metadata_spaces": ("/metadata-spaces?embedded=1", "Metadata Spaces Management"),
+      "metadata_space_create": ("/metadata-spaces?embedded=1&edit=new", "Create Metadata Space"),
+    }
+    workspace_url, workspace_title = workspace_routes.get(workspace, ("", ""))
+    compare_view = request.args.get("view", "").strip().lower() or flask_session.get("compare_view", "compare")
+    compare_cho = request.args.get("cho_id", "").strip() or flask_session.get("compare_cho", "")
+    if workspace == "compare":
+      if request.args.get("view", "").strip():
+        flask_session["compare_view"] = compare_view
+      if "cho_id" in request.args:
+        flask_session["compare_cho"] = compare_cho
     notice_level = request.args.get("notice_level", "").strip() or "success"
     notice_message = request.args.get("notice_message", "").strip()
-    memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho)
-    nodes, edges = _build_graph_data(memory_id, focus_cho)
-    selected_cho_details = _build_selected_cho_details(focus_cho) if focus_cho else None
+    requested_metadata_space = request.args.get("metadata_space", "").strip()
+    if requested_metadata_space:
+      metadata_space = get_space(requested_metadata_space) or get_space("EDM")
+      flask_session["metadata_space"] = metadata_space.name
+    else:
+      metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
+    active_cho_fields, active_memory_fields = _metadata_space_field_options(metadata_space)
+    selected_annotation_cho = str(flask_session.get("annotation_cho", ""))
+    if workspace == "compare":
+      workspace_url = f"/compare?embedded=1&view={quote(compare_view)}&cho_id={quote(compare_cho)}&metadata_space={quote(metadata_space.name)}"
+    if workspace == "metadata_spaces":
+      workspace_url = f"/metadata-spaces?embedded=1&edit={quote(metadata_space.name)}"
+    elif workspace == "metadata_space_create":
+      edit_name = request.args.get("edit", "new").strip() or "new"
+      workspace_url = f"/metadata-spaces?embedded=1&edit={quote(edit_name)}"
+    memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho, metadata_space)
+    if panel in {"memories", "chos"}:
+      selected_memory = None
+      metadata = []
+      paragraphs = []
+      memory_metadata_items = []
+      cho_metadata_items = []
+    nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
+    selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
     return render_template_string(
       HTML_TEMPLATE,
       memories=memories,
@@ -972,12 +1073,13 @@ def create_app(testing=False):
       paragraphs=paragraphs,
       memory_metadata_items=memory_metadata_items,
       cho_metadata_items=cho_metadata_items,
-      cho_fields=CHO_FIELDS,
-      memory_fields=MEMORY_FIELDS,
+      cho_fields=active_cho_fields,
+      memory_fields=active_memory_fields,
       memory_license_options=MEMORY_LICENSE_OPTIONS,
       nodes=nodes,
       edges=edges,
       focus_cho=focus_cho,
+      panel=panel,
       filter_cho=filter_cho,
       memory_coordinates=_memory_coordinate_values(selected_memory),
       graph_download_name=_graph_download_name(selected_memory, selected_cho_details),
@@ -985,6 +1087,15 @@ def create_app(testing=False):
       selected_cho_details=selected_cho_details,
       notice_level=notice_level,
       notice_message=notice_message,
+      metadata_spaces=list_spaces(),
+      active_metadata_space=metadata_space,
+      selected_annotation_cho=selected_annotation_cho,
+      workspace_url=workspace_url,
+      workspace_title=workspace_title,
+      workspace=workspace,
+      compare_view=compare_view,
+      compare_cho=compare_cho,
+      is_metadata_management=workspace in {"metadata_spaces", "metadata_space_create"},
     )
 
   @app.route("/memories/import", methods=["GET", "POST"])
@@ -1015,10 +1126,9 @@ def create_app(testing=False):
 
         with open(temp_path, encoding="utf-8", errors="replace") as handle:
           txt = handle.read()
+        original_txt = txt
         txt = html.unescape(txt)
         txt = re.sub(r"<rdf:RDF.*?</rdf:RDF>", "", txt, flags=re.DOTALL)
-        with open(temp_path, "w", encoding="utf-8") as handle:
-          handle.write(txt)
 
         existing_memory_md = _extract_memory_block_metadata(txt)
         for field in IMPORT_FIELDS:
@@ -1045,6 +1155,7 @@ def create_app(testing=False):
         else:
           with open(temp_path, encoding="utf-8", errors="replace") as handle:
             txt = handle.read()
+        original_txt = txt
         if session.query(Memory).filter(Memory.custom_id == suggested_id).first() is not None:
           notice_level = "error"
           notice_message = f"Memory ID '{suggested_id}' already exists. Choose another ID."
@@ -1070,6 +1181,7 @@ def create_app(testing=False):
             metadata["dc:identifier"] = suggested_id
 
             final_text = rebuild_memory_text(txt, metadata, suggested_id)
+            final_text = append_verbatim_copy(final_text, original_txt)
             stored_path = _write_memory_text_file(suggested_id, final_text)
             memory = Memory(
               custom_id=suggested_id,
@@ -1105,7 +1217,75 @@ def create_app(testing=False):
       form_metadata=form_metadata,
       detected_count=detected_count,
       memory_license_options=MEMORY_LICENSE_OPTIONS,
+      embedded=(request.args.get("embedded", "").strip() or request.form.get("embedded", "").strip()) == "1",
     )
+
+  @app.route("/metadata-spaces", methods=["GET", "POST"])
+  def metadata_spaces():
+    notice = request.args.get("notice_message", "").strip()
+    error = request.args.get("error", "").strip()
+    edit_name = request.args.get("edit", "").strip()
+    editing = get_space(edit_name) if edit_name else None
+    if request.method == "POST":
+      try:
+        fields = []
+        for name, description in zip(request.form.getlist("field_name"), request.form.getlist("field_description")):
+          if name.strip():
+            fields.append({"name": name.strip(), "description": description.strip()})
+        definition = {
+          "name": request.form.get("name", "").strip(),
+          "author": request.form.get("author", "").strip(),
+          "updated_at": request.form.get("updated_at", "").strip(),
+          "description": request.form.get("description", "").strip(),
+          "fields": fields,
+        }
+        if not all(definition[key] for key in ("name", "author", "updated_at", "description")) or not fields:
+          raise ValueError("Name, author, update date, description, and at least one field are required.")
+        original_name = request.form.get("original_name", "").strip()
+        if original_name and original_name != definition["name"]:
+          old_space = get_space(original_name)
+          if old_space is not None:
+            session.delete(old_space)
+            session.commit()
+        save_space(definition, replace=bool(request.form.get("replace")))
+        if request.args.get("embedded", "").strip() == "1":
+          return redirect(url_for(
+            "index",
+            workspace="metadata_spaces",
+            metadata_space=definition["name"],
+            notice_level="success",
+            notice_message="Metadata Space saved.",
+          ))
+        return redirect(url_for("metadata_spaces", notice_message="Metadata Space saved."))
+      except ValueError as exc:
+        error = str(exc)
+    return render_template_string(
+      METADATA_SPACES_TEMPLATE,
+      spaces=list_spaces(),
+      editing=editing,
+      notice=notice,
+      error=error,
+      embedded=request.args.get("embedded", "").strip() == "1",
+    )
+
+  @app.route("/metadata-spaces/import", methods=["POST"])
+  def import_metadata_space():
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename.lower().endswith(".csv"):
+      return _redirect_with_notice("index", "error", "Please select a .csv Metadata Space file.", workspace="metadata_spaces")
+    try:
+      definition = parse_space_csv(uploaded.read().decode("utf-8-sig"))
+      save_space(definition)
+    except (UnicodeDecodeError, ValueError) as exc:
+      return _redirect_with_notice("index", "error", str(exc), workspace="metadata_spaces")
+    return _redirect_with_notice("index", "success", "Metadata Space imported.", workspace="metadata_spaces")
+
+  @app.route("/metadata-spaces/<name>.csv")
+  def export_metadata_space(name):
+    space = get_space(name)
+    if space is None:
+      return _redirect_with_notice("metadata_spaces", "error", "Metadata Space not found.")
+    return Response(space_csv(space), mimetype="text/csv", headers={"Content-Disposition": f'attachment; filename="{space.name}.csv"'})
 
   @app.route("/memories/<int:memory_id>/edit", methods=["POST"])
   def edit_memory(memory_id):
@@ -1127,7 +1307,8 @@ def create_app(testing=False):
       memory.title = request.form.get("title", "").strip() or (memory.title or f"Memory {memory.id}")
 
     posted_text = request.form.get("text")
-    updated_text = posted_text if posted_text is not None else (memory.text or "")
+    posted_text = posted_text if posted_text is not None else (memory.text or "")
+    updated_text = without_verbatim_copy(posted_text)
     memory_metadata_ops = False
     current_memory_license = _memory_license_value(memory)
     if "memory_license" in request.form:
@@ -1230,6 +1411,7 @@ def create_app(testing=False):
       else:
         updated_text = _strip_memory_metadata_block(updated_text).strip()
 
+    updated_text = preserve_verbatim_copy(updated_text, memory.text or "")
     memory.custom_id = new_custom_id
     _persist_memory_to_disk(memory, updated_text)
     if identifier_changed and previous_file_path and previous_file_path != memory.file_path:
@@ -1263,11 +1445,19 @@ def create_app(testing=False):
       selected_occurrence = 0
     annotation_field = request.form.get("annotation_field", "").strip()
     annotation_cho = request.form.get("annotation_cho", "").strip()
+    metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
+    if annotation_cho:
+      flask_session["annotation_cho"] = annotation_cho
     if annotation_text and annotation_field and annotation_cho:
       annotation_open = f'<{annotation_field} cho="{annotation_cho}">'
       annotation_close = f'</{annotation_field}>'
       current_text = memory.text or ""
-      clean_text, _ = parse_text_and_spans(current_text)
+      recognized_fields = _recognized_metadata_fields(metadata_space)
+      clean_text, _ = parse_text_and_spans(
+        current_text,
+        metadata_space=metadata_space.name,
+        recognized_fields=recognized_fields,
+      )
       visible_start = _find_nth_occurrence(clean_text, annotation_text, selected_occurrence)
       if visible_start == -1:
         visible_start = clean_text.find(annotation_text)
@@ -1295,11 +1485,13 @@ def create_app(testing=False):
       session.add(memory)
       session.commit()
       redirect_kwargs = {"memory_id": memory_id}
+      redirect_kwargs["metadata_space"] = metadata_space.name
       if focus_cho:
         redirect_kwargs["focus_cho"] = focus_cho
       return _redirect_with_notice("index", "success", "Annotation added.", **redirect_kwargs)
 
     redirect_kwargs = {"memory_id": memory_id}
+    redirect_kwargs["metadata_space"] = metadata_space.name
     if focus_cho:
       redirect_kwargs["focus_cho"] = focus_cho
     return _redirect_with_notice("index", "error", "Select text and provide CHO and field before adding an annotation.", **redirect_kwargs)
@@ -1362,9 +1554,12 @@ def create_app(testing=False):
     memory_id = request.args.get("memory_id", type=int)
     focus_cho = request.args.get("focus_cho", "")
     filter_cho = request.args.get("filter_cho", "").strip()
-    memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho)
-    nodes, edges = _build_graph_data(memory_id, focus_cho)
-    selected_cho_details = _build_selected_cho_details(focus_cho) if focus_cho else None
+    metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
+    active_cho_fields, active_memory_fields = _metadata_space_field_options(metadata_space)
+    selected_annotation_cho = str(flask_session.get("annotation_cho", ""))
+    memories, chos, selected_memory, metadata, paragraphs, memory_metadata_items, cho_metadata_items, _ = _load_context(memory_id, focus_cho, metadata_space)
+    nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
+    selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
     return render_template_string(
       HTML_TEMPLATE,
       memories=memories,
@@ -1374,8 +1569,8 @@ def create_app(testing=False):
       paragraphs=paragraphs,
       memory_metadata_items=memory_metadata_items,
       cho_metadata_items=cho_metadata_items,
-      cho_fields=CHO_FIELDS,
-      memory_fields=MEMORY_FIELDS,
+      cho_fields=active_cho_fields,
+      memory_fields=active_memory_fields,
       memory_license_options=MEMORY_LICENSE_OPTIONS,
       nodes=nodes,
       edges=edges,
@@ -1387,6 +1582,12 @@ def create_app(testing=False):
       selected_cho_details=selected_cho_details,
       notice_level=request.args.get("notice_level", "").strip() or "success",
       notice_message=request.args.get("notice_message", "").strip(),
+      metadata_spaces=list_spaces(),
+      active_metadata_space=metadata_space,
+      selected_annotation_cho=selected_annotation_cho,
+      workspace_url="",
+      workspace_title="",
+      is_metadata_management=False,
     )
 
   @app.route("/search")
@@ -1436,6 +1637,14 @@ def create_app(testing=False):
     view = request.args.get("view", "compare").strip().lower()
     if view not in {"compare", "report", "matrix", "fields"}:
       view = "compare"
+    flask_session["compare_view"] = view
+    flask_session["compare_cho"] = selected_cho
+    requested_metadata_space = request.args.get("metadata_space", "").strip()
+    if requested_metadata_space:
+      metadata_space = get_space(requested_metadata_space) or get_space("EDM")
+      flask_session["metadata_space"] = metadata_space.name
+    else:
+      metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
     memory_columns = []
     matrix_rows = []
     report_sections = []
@@ -1444,7 +1653,15 @@ def create_app(testing=False):
     matrix_field_columns = []
     matrix_field_memory_rows = []
     all_memories = session.query(Memory).order_by(func.lower(Memory.custom_id), Memory.id).all()
-    metadata_by_memory_id = _build_metadata_cache(all_memories)
+    metadata_by_memory_id = _build_metadata_cache(all_memories, metadata_space)
+    field_descriptions = {}
+    for field in metadata_space.fields:
+      configured_name = str(field.get("name", "")).strip()
+      base_name, _ = split_metadata_field(configured_name)
+      description = field.get("description", "")
+      field_descriptions[base_name] = description
+      field_descriptions[configured_name] = description
+      field_descriptions[f"{base_name}@{metadata_space.name}"] = description
 
     if view == "matrix":
       matrix_cho_columns, matrix_memory_rows = _build_memory_cho_matrix(all_memories, chos, metadata_by_memory_id)
@@ -1474,7 +1691,7 @@ def create_app(testing=False):
             report_row["memories"][memory.id] = memory.custom_id or str(memory.id)
 
       matrix_rows = [
-        {"field": field, "values": values}
+        {"field": field, "display_field": _graph_metadata_label(field), "values": values}
         for field, values in sorted(field_memory_values.items())
       ]
 
@@ -1490,6 +1707,7 @@ def create_app(testing=False):
       report_sections = [
         {
           "field": field,
+          "display_field": _graph_metadata_label(field),
           "rows": [
             {
               "value": value,
@@ -1511,6 +1729,8 @@ def create_app(testing=False):
       COMPARE_TEMPLATE,
       chos=chos,
       selected_cho=selected_cho,
+      metadata_space=metadata_space,
+      embedded=request.args.get("embedded", "").strip() == "1",
       view=view,
       memory_columns=memory_columns,
       matrix_rows=matrix_rows,
@@ -1519,12 +1739,14 @@ def create_app(testing=False):
       matrix_memory_rows=matrix_memory_rows,
       matrix_field_columns=matrix_field_columns,
       matrix_field_memory_rows=matrix_field_memory_rows,
-      field_descriptions={row["field"]: _metadata_description(row["field"]) for row in matrix_rows},
+      field_descriptions=field_descriptions,
     )
 
   @app.route("/compare/report.csv")
   def export_compare_report_csv():
     selected_cho = request.args.get("cho_id", "").strip()
+    metadata_space = get_space(flask_session.get("metadata_space", "EDM")) or get_space("EDM")
+    recognized_fields = _recognized_metadata_fields(metadata_space)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(("Metadata field", "Metadata instance", "Number of instances", "Related memories"))
@@ -1533,7 +1755,11 @@ def create_app(testing=False):
       report_values = {}
       for memory in session.query(Memory).order_by(Memory.id):
         memory_label = memory.custom_id or str(memory.id)
-        for md in extract_metadata(memory.text or ""):
+        for md in extract_metadata(
+          memory.text or "",
+          metadata_space=metadata_space.name,
+          recognized_fields=recognized_fields,
+        ):
           if md.get("type") != MetadataType.CHO.value or str(md.get("cho")) != selected_cho:
             continue
           field = md.get("field", "")

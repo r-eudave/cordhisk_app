@@ -340,10 +340,10 @@ class WebAppTests(unittest.TestCase):
         self.assertIn('.sidebar-button-grid { display: flex; flex-direction: column;', page)
         self.assertIn('.side-btn:hover { background: rgba(255, 255, 255, 0.12);', page)
         self.assertIn('.sidebar-menu { position: absolute;', page)
-        self.assertIn('id="close-menu"', page)
-        self.assertIn('closeMenuButton.addEventListener(\'click\', closeMenu);', page)
+        self.assertNotIn('id="close-menu"', page)
+        self.assertNotIn('closeMenuButton.addEventListener', page)
         self.assertIn('class="cho-tags-head memory-tags-title"', page)
-        self.assertIn('class="memory-title">Memory content</h4>', page)
+        self.assertIn('class="memory-title"', page)
         self.assertNotIn('>Memory tags</h4>', page)
 
     def test_graph_page_loads(self):
