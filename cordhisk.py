@@ -1,6 +1,7 @@
 import html
 import csv
 import io
+import logging
 import os
 import re
 import tempfile
@@ -19,6 +20,9 @@ from services.metadata_schema import METADATA_FIELDS
 from services.metadata_spaces import get_space, list_spaces, parse_space_csv, save_space, space_csv
 from services.web_templates import COMPARE_TEMPLATE, HTML_TEMPLATE, IMPORT_TEMPLATE, MAP_TEMPLATE, METADATA_SPACES_TEMPLATE, SEARCH_TEMPLATE
 from services.types import MetadataType
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 CHO_FIELDS = [
@@ -1932,4 +1936,7 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+  host = os.environ.get("CORDHISK_HOST", "0.0.0.0")
+  port = int(os.environ.get("CORDHISK_PORT", "5000"))
+  debug = os.environ.get("CORDHISK_DEBUG", "1").lower() in {"1", "true", "yes", "on"}
+  app.run(host=host, port=port, debug=debug)

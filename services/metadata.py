@@ -1,5 +1,9 @@
 import re
+import logging
 from services.types import MetadataType
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 # =========================
@@ -182,8 +186,8 @@ def parse_text_and_spans(text, metadata_space=None, recognized_fields=None):
 
         return clean, spans
 
-    except Exception as e:
-        print("ERROR in parse_text_and_spans:", e)
+    except Exception:
+        LOGGER.exception("Metadata span parsing failed")
         return "", []
 
 

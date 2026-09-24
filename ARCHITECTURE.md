@@ -33,14 +33,14 @@ flowchart TD
 
 CORDHISK stores two primary record types:
 
-- **Memory.** A memory has an internal database ID, a user-facing identifier (`custom_id`), title, full text, file path, and optional license. The full text includes the original narrative plus embedded metadata.
+- **Memory.** A memory has an internal database ID, a user-facing identifier (`custom_id`), title, full text, file path, and optional licence. The full text includes the original narrative plus embedded metadata.
 - **CHO.** A Cultural Heritage Object has an internal database ID, a user-facing identifier, and title. CHO-specific descriptive values are stored as annotations in related memory texts rather than as a fixed set of columns on the CHO record.
 
 The separation is deliberate. The `CHO` table records the identity of the heritage resource, while its descriptive metadata can vary between memories. This allows CORDHISK to retain different community descriptions, names, dates, or interpretations instead of forcing a single authoritative value.
 
 ### Metadata Spaces
 
-CORDHISK App v3.0 adds a `MetadataSpace` configuration model stored in the same SQLite database. A Metadata Space contains a unique name, creator, last-update date, description, and a JSON-serialized collection of field definitions. EDM is provisioned automatically as the default Metadata Space from the existing field schema.
+CORDHISK App v3.0 adds a `MetadataSpace` configuration model stored in the same SQLite database. A Metadata Space contains a unique name, creator, last-update date, description, and a JSON-serialised collection of field definitions. EDM is provisioned automatically as the default Metadata Space from the existing field schema.
 
 The active Metadata Space is an interpretation context, not a permanent property of a memory. Non-EDM tags use the form `<Field@Space cho="CHO-ID">value</Field@Space>`, while existing EDM tags retain their legacy names. The parser filters fields by the active space, ignores unknown fields safely, and keeps the underlying memory text non-destructively intact.
 
@@ -66,7 +66,7 @@ In this example, the visible wording remains “Old Town Hall”, while the tag 
 
 ## 4. Metadata parsing and text preservation
 
-`services/metadata.py` uses a regular expression-based parser to recognize the supported XML-like tags. It provides two related operations:
+`services/metadata.py` uses a regular expression-based parser to recognise the supported XML-like tags. It provides two related operations:
 
 - `extract_metadata` returns structured metadata records for analysis, navigation, reports, and RDF export.
 - `parse_text_and_spans` removes metadata markup from the visible text while recording the character spans and meaning of each annotation.
@@ -95,7 +95,7 @@ The main route (`/`) presents the application workspace. It supports two complem
 
 Selecting a memory loads its narrative text, memory-level metadata, CHO tags, and relationship graph. Users can:
 
-- edit the memory identifier, title, content, metadata, and license;
+- edit the memory identifier, title, content, metadata, and licence;
 - annotate selected text with a CHO and metadata field;
 - remove individual metadata tags;
 - filter visible CHO tags to one CHO; and
@@ -123,7 +123,7 @@ Users can create CHOs with a stable ID and name, then use them as targets when a
 
 Memory import accepts `.txt` files. CORDHISK detects an existing memory metadata block when present, prefills the import form, retains compatible metadata, assigns an identifier, and writes the imported content to `memory_files/`. Memory edits also synchronize the database record and its associated text file. When a memory identifier changes, the corresponding application-managed filename is updated.
 
-Memories can also store WGS84 latitude and longitude as `wgs84_pos:lat` and `wgs84_pos:long` fields in their metadata preamble. The Memory metadata field menu opens a dedicated dialog for license selection and a map dialog for coordinates. Coordinates can be entered manually in the dialog or selected by clicking a point on the map. The Map page displays memories with valid coordinate pairs as interactive markers; each marker and its accompanying list entry opens the selected Memory view. Records with incomplete or invalid coordinates are excluded from the map.
+Memories can also store WGS84 latitude and longitude as `wgs84_pos:lat` and `wgs84_pos:long` fields in their metadata preamble. The Memory metadata field menu opens a dedicated dialog for licence selection and a map dialog for coordinates. Coordinates can be entered manually in the dialog or selected by clicking a point on the map. The Map page displays memories with valid coordinate pairs as interactive markers; each marker and its accompanying list entry opens the selected Memory view. Records with incomplete or invalid coordinates are excluded from the map.
 
 ## 7. Search, comparison, and reporting
 

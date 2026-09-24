@@ -15,6 +15,8 @@ python3 -m pip install -r requirements.txt
 python3 cordhisk.py
 ```
 
+The development server uses port 5000 by default. Set `CORDHISK_PORT` to use another port when 5000 is occupied, for example `CORDHISK_PORT=5001 python3 cordhisk.py`. `CORDHISK_HOST` and `CORDHISK_DEBUG` can also be set for local deployment control.
+
 Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's development server.
 
 ## Capabilities
@@ -24,10 +26,10 @@ Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's deve
 - Annotate selected memory text with metadata from the active Metadata Space. EDM remains the default space and preserves its legacy tag format.
 - Create, edit, import, export, and select persistent Metadata Spaces without coupling memories to one scheme.
 - Use `Field@Space` tags for non-EDM schemes, allowing metadata from multiple schemes to coexist in one memory.
-- Edit memory metadata, including identifiers and usage licenses, and manage individual CHO tags.
+- Edit memory metadata, including identifiers and usage licences, and manage individual CHO tags.
 - Navigate relationships in interactive Memory and CHO views, including a relationship graph.
 - Filter the CHO tags displayed for a selected memory.
-- Add Memory metadata from the field menu, including license selection and WGS84 coordinates entered manually or selected on a map, then explore geocoded memories on an interactive map.
+- Add Memory metadata from the field menu, including licence selection and WGS84 coordinates entered manually or selected on a map, then explore geocoded memories on an interactive map.
 - Search memory text with paginated results.
 - Compare one CHO across its related memories in a field-by-memory matrix.
 - Generate a CHO report grouped by metadata field and instance frequency, with links to related memories and CSV download.
@@ -57,7 +59,7 @@ Creator,Person responsible for creating the memory
 Date,Date associated with the memory
 ```
 
-The interface uses a solid, warm, color-blind-friendly palette. The sidebar, central graph, and right memory panel adapt to the browser viewport; long content scrolls inside its panel instead of expanding the whole page.
+The interface uses a solid, warm, colour-blind-friendly palette. The sidebar, central graph, and right memory panel adapt to the browser viewport; long content scrolls inside its panel instead of expanding the whole page.
 
 ## Development
 
