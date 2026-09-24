@@ -112,6 +112,11 @@ HTML_TEMPLATE = """
       .sidebar-list { list-style: none; margin: 0; padding: 0; }
       .sidebar-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
       .sidebar-list a { color: #2b2118; display: inline-block; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .record-identity { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; }
+      .record-identity h4 { margin: 0; }
+      .record-identity small { color: #6b5b4d; font-size: 11px; }
+      .record-identity .record-label { color: #6b5b4d; font-size: 10px; font-weight: 700; }
       .mini-delete { width: 24px; min-width: 24px; height: 24px; line-height: 24px; padding: 0; border-radius: 999px; background: #facc15; color: #1f2937; font-weight: 700; font-size: 14px; }
       .sidebar-action { margin-bottom: 12px; }
       .sidebar-action button { width: 100%; background: #0ea5e9; }
@@ -177,11 +182,16 @@ HTML_TEMPLATE = """
       .annotation-title { font-weight: 400; }
       .memory-title { margin: 0 0 10px; font-size: 1em; font-weight: 700; }
       .metadata-helper { color: #475569; font-size: 13px; margin: 0 0 8px; }
+      .cho-report-section { margin-top: 18px; }
+      .cho-report-section h5 { margin: 0 0 6px; color: #7c2d12; font-size: 14px; }
+      .cho-report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      .cho-report-table th, .cho-report-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid #ead9c8; vertical-align: top; }
+      .cho-report-table th:first-child { width: 42px; }
       .memory-tags-title { color: #1b1f24; }
       .right-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
-      .right-panel .metadata-card { order: 1; }
+      .right-panel .metadata-card { order: 1; position: static; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
       .right-panel .memory-text-card { order: 2; }
-      .right-panel .project-footer-note { order: 3; }
+      .right-panel .project-footer-note { order: 3; flex: 0 0 auto; }
       .memory-text-card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
       .memory-text-card form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
       .memory-text-scroll { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
@@ -297,7 +307,7 @@ HTML_TEMPLATE = """
             {% if selected_memory %}
             <div id="memory-tags-panel">
               <div class="cho-tags-head memory-tags-title">
-                <h4>{{ selected_memory.custom_id or selected_memory.id }} — {{ selected_memory.title or ('Memory ' ~ selected_memory.id) }}</h4>
+                <h4>Memory metadata</h4>
               </div>
               <form action="/memories/{{ selected_memory.id }}/edit" method="post" id="memory-metadata-form">
                 <input type="hidden" name="focus_cho" value="{{ focus_cho or '' }}">
@@ -415,7 +425,9 @@ HTML_TEMPLATE = """
             <div class="card memory-text-card">
               <div class="workspace-heading">
                 <a class="rdf-link" href="/export/memory/{{ selected_memory.id }}.rdf">Export RDF</a>
-                <h4 class="memory-title">{{ selected_memory.custom_id or selected_memory.id }} — {{ selected_memory.title or ('Memory ' ~ selected_memory.id) }}</h4>
+                <div class="record-identity">
+                  <h4 class="memory-title"><span class="record-label">ID:</span> {{ selected_memory.custom_id or selected_memory.id }} <span class="record-label">Name:</span> {{ selected_memory.title or ('Memory ' ~ selected_memory.id) }}</h4>
+                </div>
               </div>
               <form action="/memories/{{ selected_memory.id }}/annotate" method="post" id="memory-annotation-form">
                 <p class="annotation-title metadata-helper">Annotate highlighted memory text</p>
@@ -455,36 +467,41 @@ HTML_TEMPLATE = """
                 <input type="hidden" name="focus_cho" value="{{ focus_cho or '' }}">
               </form>
             </div>
-            <p class="project-footer-note">
-              Developped by Rafael Ramirez Eudave at the Delft University of Technology (2026).<br>
-              The "Community-driven Digitisation for Heritage at Risk" (CORDHISK) project is funded by the European Union's Horizon Europe 2023 (Marie Sklodowska Curie grant agreement No 101149833).
-            </p>
             {% endif %}
             {% if focus_cho %}
             <div class="card metadata-card">
               {% if selected_cho_details %}
                 <div class="workspace-heading">
                   <a class="rdf-link" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">Export RDF</a>
-                  <h4>CHO {{ selected_cho_details.label }} — {{ selected_cho_details.title }}</h4>
-                </div>
-                <p class="metadata-helper">Metadata grouped by memory for the selected CHO.</p>
-                {% for group in selected_cho_details.memories %}
-                <div class="cho-memory-group">
-                  <p><strong><a href="/?memory_id={{ group.memory_id }}&filter_cho={{ selected_cho_details.label }}">{{ group.memory_label }}</a></strong></p>
-                  <div class="tag-list">
-                    {% for tag in group.tags %}
-                    <span class="pill cho">{{ tag.display_field }}: {{ tag.value }}</span>
-                    {% endfor %}
+                  <div class="record-identity">
+                    <h4><span class="record-label">ID:</span> {{ selected_cho_details.label }} <span class="record-label">Name:</span> {{ selected_cho_details.title }}</h4>
                   </div>
                 </div>
-                {% else %}
-                <p>No metadata found for this CHO in the current memories.</p>
+                {% for section in cho_report_sections %}
+                <section class="cho-report-section">
+                  <h5>{{ section.display_field }}</h5>
+                  <table class="cho-report-table">
+                    <thead><tr><th>N</th><th>Instance</th><th>Related memories</th></tr></thead>
+                    <tbody>
+                    {% for row in section.rows %}
+                    <tr><td>{{ row.count }}</td><td>{{ row.value }}</td><td>{% for memory in row.memories %}<a href="/?memory_id={{ memory.id }}&filter_cho={{ selected_cho_details.label }}">{{ memory.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </section>
                 {% endfor %}
+                {% if not cho_report_sections %}
+                <p>No metadata found for this CHO in the current memories.</p>
+                {% endif %}
               {% elif focus_cho %}
                 <p>Select a CHO from the sidebar or graph to view CHO metadata grouped by memory.</p>
               {% endif %}
             </div>
             {% endif %}
+            <p class="project-footer-note">
+              Developped by Rafael Ramirez Eudave at the Delft University of Technology (2026).<br>
+              The "Community-driven Digitisation for Heritage at Risk" (CORDHISK) project is funded by the European Union's Horizon Europe 2023 (Marie Sklodowska Curie grant agreement No 101149833).
+            </p>
           </div>
         </div>
         {% else %}
@@ -1027,7 +1044,7 @@ HTML_TEMPLATE = """
             memoriesPanel.classList.toggle('hidden', !showMemories);
             chosPanel.classList.toggle('hidden', !showChos);
             tagsPanel.classList.toggle('hidden', !showTags);
-            showMemoriesBtn.classList.toggle('active', showMemories);
+            showMemoriesBtn.classList.toggle('active', showMemories || showTags);
             showChosBtn.classList.toggle('active', showChos);
           };
           showMemoriesBtn.addEventListener('click', function () { selectList('memories'); });
@@ -1363,9 +1380,6 @@ METADATA_SPACES_TEMPLATE = """
   </head>
   <body>
     <main class="page{% if embedded %} embedded-page{% endif %}">
-      <header class="topbar">
-        <div><h1>Medatata Spaces Management</h1><p class="intro">Check, edit, import, and download the metadata schemes available to CORDHISK.</p></div>
-      </header>
       {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
       {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
       <div class="layout">
@@ -1391,7 +1405,6 @@ METADATA_SPACES_TEMPLATE = """
         </section>
         {% endif %}
         <section class="panel">
-          <h2>{{ "Edit Metadata Space" if editing else "Create Metadata Space" }}</h2>
           <form id="metadata-space-form" method="post" action="/metadata-spaces"{% if embedded %} target="_top"{% endif %}>
             <input type="hidden" name="original_name" value="{{ editing.name if editing else "" }}">
             <input type="hidden" name="replace" value="1">

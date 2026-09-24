@@ -748,6 +748,45 @@ def _build_selected_cho_details(focus_cho, metadata_space=None):
   }
 
 
+def _build_cho_report_sections(focus_cho, metadata_space=None):
+  cho = _find_cho(focus_cho)
+  if cho is None:
+    return []
+  cho_refs = {str(cho.id)}
+  if cho.custom_id:
+    cho_refs.add(str(cho.custom_id))
+  memories = session.query(Memory).order_by(Memory.id).all()
+  metadata_by_memory_id = _build_metadata_cache(memories, metadata_space)
+  report_values = {}
+  for memory in memories:
+    memory_label = memory.custom_id or str(memory.id)
+    for item in metadata_by_memory_id.get(memory.id, []):
+      if item.get("type") != MetadataType.CHO.value or str(item.get("cho")) not in cho_refs:
+        continue
+      field = item.get("field", "")
+      value = item.get("value", "")
+      if not field:
+        continue
+      row = report_values.setdefault(field, {}).setdefault(value, {"count": 0, "memories": {}})
+      row["count"] += 1
+      row["memories"][memory.id] = memory_label
+  return [
+    {
+      "field": field,
+      "display_field": _graph_metadata_label(field),
+      "rows": [
+        {
+          "value": value,
+          "count": row["count"],
+          "memories": [{"id": memory_id, "label": label} for memory_id, label in row["memories"].items()],
+        }
+        for value, row in sorted(values.items(), key=lambda item: (-item[1]["count"], item[0].casefold()))
+      ],
+    }
+    for field, values in sorted(report_values.items())
+  ]
+
+
 def _strip_memory_metadata_block(text):
     return re.sub(
         r'===\s*MEMORY METADATA START\s*===.*?===\s*MEMORY METADATA END\s*===\s*',
@@ -1063,6 +1102,7 @@ def create_app(testing=False):
     nodes, edges = _build_graph_data(memory_id, focus_cho, metadata_space)
     graph_height = _graph_height(nodes)
     selected_cho_details = _build_selected_cho_details(focus_cho, metadata_space) if focus_cho else None
+    cho_report_sections = _build_cho_report_sections(focus_cho, metadata_space) if focus_cho else []
     return render_template_string(
       HTML_TEMPLATE,
       memories=memories,
@@ -1085,6 +1125,7 @@ def create_app(testing=False):
       graph_height=graph_height,
       focus_memory=f"memory:{memory_id}" if memory_id else "",
       selected_cho_details=selected_cho_details,
+      cho_report_sections=cho_report_sections,
       notice_level=notice_level,
       notice_message=notice_message,
       metadata_spaces=list_spaces(),
@@ -1583,6 +1624,7 @@ def create_app(testing=False):
       graph_height=graph_height,
       focus_memory=f"memory:{memory_id}" if memory_id else "",
       selected_cho_details=selected_cho_details,
+      cho_report_sections=[],
       notice_level=request.args.get("notice_level", "").strip() or "success",
       notice_message=request.args.get("notice_message", "").strip(),
       metadata_spaces=list_spaces(),
