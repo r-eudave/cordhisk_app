@@ -1083,6 +1083,13 @@ def create_app(testing=False):
   app.config["TESTING"] = testing
   app.secret_key = "cordhisk-local-session"
 
+  @app.errorhandler(Exception)
+  def handle_unexpected_error(error):
+    LOGGER.exception("Unhandled error while serving %s %s", request.method, request.path)
+    if testing:
+      raise error
+    return "Internal Server Error. See cordhisk.log beside the executable.", 500
+
   @app.route("/")
   def index():
     memory_id = request.args.get("memory_id", type=int)
