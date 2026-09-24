@@ -38,6 +38,12 @@ CORDHISK stores two primary record types:
 
 The separation is deliberate. The `CHO` table records the identity of the heritage resource, while its descriptive metadata can vary between memories. This allows CORDHISK to retain different community descriptions, names, dates, or interpretations instead of forcing a single authoritative value.
 
+### Metadata Spaces
+
+CORDHISK App v3.0 adds a `MetadataSpace` configuration model stored in the same SQLite database. A Metadata Space contains a unique name, creator, last-update date, description, and a JSON-serialized collection of field definitions. EDM is provisioned automatically as the default Metadata Space from the existing field schema.
+
+The active Metadata Space is an interpretation context, not a permanent property of a memory. Non-EDM tags use the form `<Field@Space cho="CHO-ID">value</Field@Space>`, while existing EDM tags retain their legacy names. The parser filters fields by the active space, ignores unknown fields safely, and keeps the underlying memory text non-destructively intact.
+
 ### Embedded metadata format
 
 Memory-level metadata is stored in a protected metadata block at the beginning of a memory:
@@ -68,6 +74,18 @@ In this example, the visible wording remains “Old Town Hall”, while the tag 
 The visible-memory view is therefore clean and readable, with annotated segments highlighted rather than showing raw markup. When a user adds, edits, or deletes metadata, CORDHISK rebuilds the textual representation through `services/memory_service.py`. This process preserves the narrative content, rewrites the memory metadata block, and reconstructs CHO tags around their annotated values.
 
 This model has practical advantages: memory files remain portable text documents, metadata travels with the memory, and the database can be regenerated or inspected independently of a proprietary annotation format.
+
+### Protected imported originals
+
+When a text memory is imported, CORDHISK appends a protected section using:
+
+```text
+=== MEMORY VERBATIM COPY START ===
+original imported text, with metadata wrappers removed
+=== MEMORY VERBATIM COPY END ===
+```
+
+The protected copy is excluded from visible text, metadata parsing, annotation, editing, and Metadata Space switching. It is never rewritten after import. New copies are cleaned of XML-like tag wrappers while preserving their text content.
 
 ## 5. Main workspace and navigation
 
@@ -104,6 +122,8 @@ Memory import accepts `.txt` files. CORDHISK detects an existing memory metadata
 Memories can also store WGS84 latitude and longitude as `wgs84_pos:lat` and `wgs84_pos:long` fields in their metadata preamble. The Memory metadata field menu opens a dedicated dialog for license selection and a map dialog for coordinates. Coordinates can be entered manually in the dialog or selected by clicking a point on the map. The Map page displays memories with valid coordinate pairs as interactive markers; each marker and its accompanying list entry opens the selected Memory view. Records with incomplete or invalid coordinates are excluded from the map.
 
 ## 7. Search, comparison, and reporting
+
+All comparison, report, Memory/CHO matrix, and Memory/Field matrix operations use the active Metadata Space. Switching schemes refreshes the current view, CHO selection, and view mode without converting or rewriting memory content. User-facing labels hide the internal `@Space` suffix while preserving it for parsing, editing, and export.
 
 ### Search
 
@@ -145,6 +165,8 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
 The application also performs a lightweight schema compatibility check at startup to add the memory `license` column to older local databases when necessary.
+
+Focused validation also covers Metadata Space persistence, CSV round trips, nested cross-space tags, protected verbatim copies, active-space filtering, and preservation of Compare/Report view state during scheme switching.
 
 ## 10. Repository organization and operation
 

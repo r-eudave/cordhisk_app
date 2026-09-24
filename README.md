@@ -1,4 +1,4 @@
-# CORDHISK
+# CORDHISK App v3.0
 
 CORDHISK is a browser-based application for annotating textual memories and connecting their passages to Cultural Heritage Objects (CHOs) through structured metadata.
 
@@ -21,7 +21,9 @@ Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's deve
 
 - Create, edit, delete, and browse memories and CHOs.
 - Import `.txt` memories while preserving or completing embedded memory metadata.
-- Annotate selected memory text with CHO metadata from Dublin Core, DCTERMS, OAF, and RDA vocabularies.
+- Annotate selected memory text with metadata from the active Metadata Space. EDM remains the default space and preserves its legacy tag format.
+- Create, edit, import, export, and select persistent Metadata Spaces without coupling memories to one scheme.
+- Use `Field@Space` tags for non-EDM schemes, allowing metadata from multiple schemes to coexist in one memory.
 - Edit memory metadata, including identifiers and usage licenses, and manage individual CHO tags.
 - Navigate relationships in interactive Memory and CHO views, including a relationship graph.
 - Filter the CHO tags displayed for a selected memory.
@@ -32,10 +34,26 @@ Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's deve
 - View a Memory/CHO matrix showing, for every memory and CHO, the number of annotation tags between them, with total annotation counts per memory and per CHO.
 - View a Memory/Field matrix showing, for every memory and metadata field (e.g. title, description), how many times that field appears within the memory, regardless of CHO.
 - Export Memory and CHO metadata as downloadable RDF/XML.
+- Switch between Memories, CHO records, and Metadata views while retaining the active Metadata Space.
+- Compare, report, and build Memory/CHO and Memory/Field matrices using only the active Metadata Space.
 
 ## Data storage
 
 CORDHISK stores its SQLite database and memory text files in `memory_files/`. Back up this directory to preserve application data.
+
+Metadata Space definitions are stored in the `metadata_spaces` SQLite table in `memory_files/000_cordhisk.db`. Each definition contains its name, creator, update date, description, and field descriptions. Memory files imported after v3.0 also contain a protected verbatim-copy section recording the original imported text; this section is hidden from editing and metadata interpretation.
+
+Metadata Spaces can be exchanged using CSV files with this structure:
+
+```csv
+Metadata Scheme Name,W7
+Creator,John Smith
+Last Update,2026-09-22
+Description,Metadata scheme for W7 memories
+Field,Description
+Creator,Person responsible for creating the memory
+Date,Date associated with the memory
+```
 
 ## Development
 
@@ -49,6 +67,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 
 - `cordhisk.py`: Flask application and HTTP routes.
 - `services/`: metadata parsing, schema definitions, data types, memory rebuilding, and HTML templates.
+- `services/metadata_spaces.py`: persistent Metadata Space definitions and CSV import/export.
 - `memory_files/`: application-managed memory text files and SQLite database.
 - `tests/`: automated Flask application tests.
 
