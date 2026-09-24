@@ -24,6 +24,13 @@ CLOSE_ON_UNLOAD_SCRIPT = """
           markInternalNavigation();
           return nativeFormSubmit.apply(this, arguments);
         };
+        window.addEventListener('beforeunload', function (event) {
+          if (allowShutdownOnClose) {
+            event.preventDefault();
+            event.returnValue = 'Closing this tab will close CORDHISK. Are you sure?';
+            return event.returnValue;
+          }
+        });
         window.addEventListener('pagehide', function (event) {
           if (allowShutdownOnClose && !event.persisted) {
             navigator.sendBeacon('/shutdown');
