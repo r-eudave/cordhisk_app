@@ -24,6 +24,17 @@ class WebAppTests(unittest.TestCase):
         self.assertIn(b'>.txt</a>', response.data)
         self.assertIn(b"confirm('Delete this object and remove its tags from all memories?')", response.data)
 
+    def test_index_has_safe_close_button_and_confirmation(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Close app', response.data)
+        self.assertIn(b"Are you sure you want to close CORDHISK?", response.data)
+
+    def test_shutdown_route_stops_the_app_server(self):
+        response = self.client.post('/shutdown')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'shutdown', response.data.lower())
+
     def test_add_cho_metadata_dialog_removed(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)

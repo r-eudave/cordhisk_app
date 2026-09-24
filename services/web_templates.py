@@ -129,6 +129,8 @@ HTML_TEMPLATE = """
       .sidebar-button-grid { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-bottom: 12px; padding: 4px 0; }
       .side-btn, .side-btn:visited { display: flex; align-items: center; justify-content: flex-start; width: 100%; min-width: 0; min-height: 30px; box-sizing: border-box; padding: 6px 10px; border-radius: 4px; color: #dbeafe; background: transparent; border: 0; font-size: 13px; font-weight: 600; text-align: left; }
       .side-btn:hover { background: rgba(255, 255, 255, 0.12); color: white; }
+      .side-btn.close-app-btn { background: #7f1d1d; color: white; }
+      .side-btn.close-app-btn:hover { background: #991b1b; color: white; }
       .side-btn.alt, .side-btn.alt:visited { color: #dbeafe; }
       .side-btn.alt:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .contextual-action { display: block; width: 100%; box-sizing: border-box; height: 28px; margin: 0; padding: 5px 8px; border: 1px solid #e69f00; border-radius: 4px; color: #003b5c; background: #ffffff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; text-decoration: none; }
@@ -246,6 +248,7 @@ HTML_TEMPLATE = """
             <a class="side-btn" href="/?workspace=search">Search text in memories</a>
             <a class="side-btn" href="/?workspace=map">Open map for georeferenced memories</a>
             <a class="side-btn" href="/?workspace=compare">Quantitative report</a>
+            <button type="button" id="close-app-btn" class="side-btn close-app-btn" title="Close the app safely">Close app</button>
           </div>
         </div>
         <div class="list-selector">
@@ -604,6 +607,7 @@ HTML_TEMPLATE = """
         const addChoTagBox = document.getElementById('add-cho-tag-box');
         const menuToggleButton = document.getElementById('toggle-menu');
         const sidebarMenu = document.getElementById('sidebar-menu');
+        const closeAppButton = document.getElementById('close-app-btn');
         const svg = document.getElementById('graph-svg');
         const graphContent = document.getElementById('graph-content');
         const hoverValueBox = document.getElementById('graph-hover-value');
@@ -869,6 +873,29 @@ HTML_TEMPLATE = """
           });
           window.addEventListener('resize', syncMenu);
           syncMenu();
+        }
+
+        if (closeAppButton) {
+          closeAppButton.addEventListener('click', function () {
+            const confirmed = window.confirm('Are you sure you want to close CORDHISK?');
+            if (!confirmed) {
+              return;
+            }
+
+            fetch('/shutdown', {
+              method: 'POST',
+              credentials: 'same-origin',
+            }).finally(function () {
+              if (typeof window.close === 'function') {
+                try {
+                  window.close();
+                } catch (error) {
+                  // Browsers may block automatic closing; fallback to a blank page.
+                }
+              }
+              window.location.href = 'about:blank';
+            });
+          });
         }
 
         document.querySelectorAll('.tag-selector input').forEach(function (input) {

@@ -1944,6 +1944,20 @@ def create_app(testing=False):
   def health():
     return {"status": "ok"}
 
+  @app.route("/shutdown", methods=["POST"])
+  def shutdown():
+    if app.config.get("TESTING"):
+      return {"status": "shutdown"}
+
+    shutdown_func = request.environ.get("werkzeug.server.shutdown")
+    if callable(shutdown_func):
+      try:
+        shutdown_func()
+      except Exception:
+        pass
+
+    os._exit(0)
+
   return app
 
 
