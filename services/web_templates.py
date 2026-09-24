@@ -1,3 +1,38 @@
+CLOSE_ON_UNLOAD_SCRIPT = """
+    <script>
+      (function () {
+        if (window.top !== window) {
+          return;
+        }
+        var allowShutdownOnClose = true;
+        var markInternalNavigation = function () {
+          allowShutdownOnClose = false;
+        };
+        document.addEventListener('click', function (event) {
+          var anchor = event.target.closest && event.target.closest('a[href]');
+          if (anchor && anchor.target !== '_blank' && !anchor.hasAttribute('download')) {
+            markInternalNavigation();
+          }
+        }, true);
+        document.addEventListener('submit', function (event) {
+          if (!event.defaultPrevented) {
+            markInternalNavigation();
+          }
+        });
+        var nativeFormSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function () {
+          markInternalNavigation();
+          return nativeFormSubmit.apply(this, arguments);
+        };
+        window.addEventListener('pagehide', function (event) {
+          if (allowShutdownOnClose && !event.persisted) {
+            navigator.sendBeacon('/shutdown');
+          }
+        });
+      })();
+    </script>
+"""
+
 HTML_TEMPLATE = """
 <!doctype html>
 <html lang="en">
@@ -1380,9 +1415,12 @@ HTML_TEMPLATE = """
         }
       });
     </script>
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+HTML_TEMPLATE = HTML_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
 
 METADATA_SPACES_TEMPLATE = """
 <!doctype html>
@@ -1497,9 +1535,12 @@ METADATA_SPACES_TEMPLATE = """
         });
       }
     </script>
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+METADATA_SPACES_TEMPLATE = METADATA_SPACES_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
 
 SEARCH_TEMPLATE = """
 <!doctype html>
@@ -1566,9 +1607,12 @@ SEARCH_TEMPLATE = """
       </div>
       {% endif %}
     </div>
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+SEARCH_TEMPLATE = SEARCH_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
 
 COMPARE_TEMPLATE = """
 <!doctype html>
@@ -1741,9 +1785,12 @@ COMPARE_TEMPLATE = """
       </div>
       {% endif %}
     </div>
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+COMPARE_TEMPLATE = COMPARE_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
 
 MAP_TEMPLATE = """
 <!doctype html>
@@ -1819,9 +1866,12 @@ MAP_TEMPLATE = """
       }
     </script>
     {% endif %}
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+MAP_TEMPLATE = MAP_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
 
 IMPORT_TEMPLATE = """
 <!doctype html>
@@ -1887,6 +1937,9 @@ IMPORT_TEMPLATE = """
         </form>
       </div>
     </div>
+{{ close_on_unload_script }}
   </body>
 </html>
 """
+
+IMPORT_TEMPLATE = IMPORT_TEMPLATE.replace("{{ close_on_unload_script }}", CLOSE_ON_UNLOAD_SCRIPT)
