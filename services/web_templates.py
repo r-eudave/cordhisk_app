@@ -240,12 +240,12 @@ HTML_TEMPLATE = """
           <button type="button" class="menu-toggle" id="toggle-menu" aria-label="Open menu" title="Open menu">Menu</button>
           <h2>CORDHISK APP v3.0</h2>
         </div>
-        <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects (CHO).</p>
+        <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects.</p>
         <div class="sidebar-menu hidden" id="sidebar-menu">
           <div class="sidebar-button-grid">
             <a class="side-btn" href="/?workspace=search">Search text in memories</a>
             <a class="side-btn" href="/?workspace=map">Open map for georeferenced memories</a>
-            <a class="side-btn" href="/?workspace=compare">Report</a>
+            <a class="side-btn" href="/?workspace=compare">Quantitative report</a>
           </div>
         </div>
         <div class="list-selector">
@@ -258,7 +258,7 @@ HTML_TEMPLATE = """
             </select>
           </form>
           <button type="button" id="show-memories-btn" class="{% if not focus_cho and panel != 'chos' and not is_metadata_management %}active{% endif %}">Memories</button>
-          <button type="button" id="show-chos-btn" class="{% if (focus_cho or panel == 'chos') and not is_metadata_management %}active{% endif %}">CHO records</button>
+          <button type="button" id="show-chos-btn" class="{% if (focus_cho or panel == 'chos') and not is_metadata_management %}active{% endif %}">Objects</button>
           <a class="metadata-link{% if is_metadata_management %} active{% endif %}" id="show-metadata-btn" href="/?workspace=metadata_spaces&metadata_space={{ active_metadata_space.name }}">Metadata</a>
         </div>
         {% if is_metadata_management %}
@@ -292,8 +292,8 @@ HTML_TEMPLATE = """
               {% for cho in chos %}
               <li>
                 <a href="/?focus_cho={{ cho.custom_id or cho.id }}">{{ cho.custom_id or cho.id }} — {{ cho.title or cho.custom_id or cho.id }}</a>
-                <form action="/chos/{{ cho.id }}/delete{% if selected_memory %}?memory_id={{ selected_memory.id }}{% endif %}" method="post" onsubmit="return confirm('Delete this CHO and remove its tags from all memories?');">
-                  <button type="submit" class="mini-delete" title="Delete CHO">-</button>
+                <form action="/chos/{{ cho.id }}/delete{% if selected_memory %}?memory_id={{ selected_memory.id }}{% endif %}" method="post" onsubmit="return confirm('Delete this object and remove its tags from all memories?');">
+                  <button type="submit" class="mini-delete" title="Delete object">-</button>
                 </form>
               </li>
               {% endfor %}
@@ -315,7 +315,7 @@ HTML_TEMPLATE = """
                   <button type="submit" class="pill remove" name="remove_selected" value="1" title="Remove selected metadata" onclick="return confirm('Remove selected metadata tags?');">Remove</button>
                   <div class="cho-filter-row">
                     <select id="cho-tag-filter" name="cho_tag_filter">
-                      <option value="">All CHO</option>
+                      <option value="">All objects</option>
                     </select>
                     <span id="cho-tag-count" class="cho-filter-count"></span>
                   </div>
@@ -361,7 +361,7 @@ HTML_TEMPLATE = """
                 <input id="memory-longitude" name="memory_longitude" type="hidden" value="{{ memory_coordinates['wgs84_pos:long'] }}">
 
                 <div class="tag-section">
-                  <div class="metadata-section-label">CHO metadata</div>
+                  <div class="metadata-section-label">Object metadata</div>
                   <div class="tag-list cho-tags-list" id="cho-tags-list">
                     {% for md in cho_metadata_items %}
                     <label class="tag-selector cho-tag-item" data-cho-id="{{ md.cho }}" data-cho-label="{{ md.label }}">
@@ -369,14 +369,14 @@ HTML_TEMPLATE = """
                       <span class="pill cho cho-tag-link" data-cho-tag-index="{{ md.index }}" data-metadata-field="{{ md.field }}" data-metadata-value="{{ md.value }}">{{ md.label }} / {{ md.label_field }}: {{ md.value }}</span>
                     </label>
                     {% else %}
-                    <span class="pill cho">No CHO metadata</span>
+                    <span class="pill cho">No object metadata</span>
                     {% endfor %}
                   </div>
                 </div>
               </form>
             </div>
             {% else %}
-            <p>Select a memory to edit memory and CHO tags.</p>
+            <p>Select a memory to edit memory and object tags.</p>
             {% endif %}
           </div>
         </div>
@@ -398,22 +398,22 @@ HTML_TEMPLATE = """
         {% endif %}
         {% if panel == 'chos' or focus_cho %}
         <div class="contextual-action-row">
-          <button type="button" class="contextual-action" id="open-add-cho">Add CHO</button>
+          <button type="button" class="contextual-action" id="open-add-cho">Add Object</button>
           <span class="contextual-label">Export</span>
           {% if selected_cho_details %}
           <a class="contextual-action" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">.rdf</a>
           <a class="contextual-action" href="/compare/report.csv?cho_id={{ selected_cho_details.label }}&metadata_space={{ active_metadata_space.name }}">.csv</a>
           {% else %}
-          <a class="contextual-action" href="#" onclick="alert('Select a CHO first.'); return false;">.rdf</a>
-          <a class="contextual-action" href="#" onclick="alert('Select a CHO first.'); return false;">.csv</a>
+          <a class="contextual-action" href="#" onclick="alert('Select an object first.'); return false;">.rdf</a>
+          <a class="contextual-action" href="#" onclick="alert('Select an object first.'); return false;">.csv</a>
           {% endif %}
         </div>
         <form id="add-cho-pop" class="sidebar-pop" action="/chos/create" method="post">
-          <label>CHO code</label>
+          <label>Object ID</label>
           <input name="custom_id" placeholder="e.g. PR99" required>
           <label>Title</label>
-          <input name="title" placeholder="CHO title">
-          <button type="submit">Create CHO</button>
+          <input name="title" placeholder="Object name">
+          <button type="submit">Create Object</button>
         </form>
         {% endif %}
         {% endif %}
@@ -427,9 +427,9 @@ HTML_TEMPLATE = """
         {% elif selected_memory or focus_cho or graph_page %}
         <div class="grid">
           <div class="card graph-card">
-            <div id="graph-hover-value" class="graph-hover-value">Hover CHO or metadata nodes to inspect values.</div>
+            <div id="graph-hover-value" class="graph-hover-value">Hover object or metadata nodes to inspect values.</div>
             <div class="graph-shell">
-                <svg id="graph-svg" viewBox="0 0 1000 {{ graph_height }}" role="img" aria-label="Memory and CHO graph">
+                <svg id="graph-svg" viewBox="0 0 1000 {{ graph_height }}" role="img" aria-label="Memory and object graph">
                 <g id="graph-content">
                   {% for edge in edges %}
                   <line x1="{{ edge[0].x }}" y1="{{ edge[0].y }}" x2="{{ edge[1].x }}" y2="{{ edge[1].y }}" data-from-id="{{ edge[0].id }}" data-to-id="{{ edge[1].id }}" stroke="#94a3b8" stroke-width="2"></line>
@@ -467,7 +467,7 @@ HTML_TEMPLATE = """
                 <div id="add-cho-tag-box" class="annotation-inline-edit">
                 <div class="inline-annotation-row">
                   <div>
-                    <label>CHO</label>
+                    <label>Object</label>
                     <select name="annotation_cho">
                       {% for cho in chos %}
                       <option value="{{ cho.custom_id or cho.id }}"{% if selected_annotation_cho == (cho.custom_id or cho.id|string) %} selected{% endif %}>{{ cho.custom_id or cho.id }}{% if cho.title %} ({{ cho.title }}){% endif %}</option>
@@ -523,7 +523,7 @@ HTML_TEMPLATE = """
                 <p>No metadata found for this CHO in the current memories.</p>
                 {% endif %}
               {% elif focus_cho %}
-                <p>Select a CHO from the sidebar or graph to view CHO metadata grouped by memory.</p>
+                <p>Select an object from the sidebar or graph to view object metadata grouped by memory.</p>
               {% endif %}
             </div>
             {% endif %}
@@ -1133,7 +1133,7 @@ HTML_TEMPLATE = """
           choTagFilter.addEventListener('change', applyChoTagFilter);
           choTagFilter.value = initialChoTagFilter;
           applyChoTagFilter();
-        } else if (choTagFilter && choTagsList && choTagsList.textContent && choTagsList.textContent.includes('No CHO metadata')) {
+        } else if (choTagFilter && choTagsList && choTagsList.textContent && choTagsList.textContent.includes('No object metadata')) {
           choTagFilter.disabled = true;
           if (choTagCount) {
             choTagCount.textContent = '0 shown / 0 total';
@@ -1176,7 +1176,7 @@ HTML_TEMPLATE = """
               zoomLevel = 1;
               panX = 0;
               panY = 0;
-              setHoverValue('Hover CHO or metadata nodes to inspect values.');
+              setHoverValue('Hover object or metadata nodes to inspect values.');
               applyTransform();
             });
           }
@@ -1548,7 +1548,7 @@ COMPARE_TEMPLATE = """
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CHO metadata report</title>
+    <title>Object metadata report</title>
     <style>
       body { font-family: "Avenir Next", "Segoe UI", sans-serif; margin: 0; background: #eef3f6; color: #17212b; }
       .wrap { max-width: 980px; margin: 32px auto; padding: 24px; }
@@ -1578,22 +1578,22 @@ COMPARE_TEMPLATE = """
   <body>
     <div class="wrap">
       <div class="card">
-        <h1>Report by CHO</h1>
-        <p>Review metadata fields, instances, counts, and related memories for one CHO.</p>
+        <h1>Report by Object</h1>
+        <p>Review metadata fields, instances, counts, and related memories for one object.</p>
       </div>
       <div class="card">
         <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top"{% endif %}>
           {% if embedded %}<input type="hidden" name="workspace" value="compare">{% endif %}
           <input type="hidden" name="metadata_space" value="{{ metadata_space.name }}">
-          <label>CHO</label>
+          <label>Object</label>
           <select name="cho_id">
-            <option value="">Choose CHO</option>
+            <option value="">Choose object</option>
             {% for cho in chos %}
             <option value="{{ cho.custom_id or cho.id }}" {% if selected_cho == (cho.custom_id or cho.id|string) %}selected{% endif %}>{{ cho.title or cho.custom_id or cho.id }} ({{ cho.custom_id or cho.id }})</option>
             {% endfor %}
           </select>
           <div class="view-toggle">
-            <label><input type="radio" name="view" value="matrix" {% if view == 'matrix' %}checked{% endif %}> Memory/CHO matrix</label>
+            <label><input type="radio" name="view" value="matrix" {% if view == 'matrix' %}checked{% endif %}> Memory/Object matrix</label>
             <label><input type="radio" name="view" value="fields" {% if view == 'fields' %}checked{% endif %}> Memory/Field matrix</label>
           </div>
           <button type="submit">Show results</button>
@@ -1601,8 +1601,8 @@ COMPARE_TEMPLATE = """
       </div>
       {% if view == 'matrix' %}
       <div class="card">
-        <h2>Memory / CHO matrix</h2>
-        <p>Number of metadata tags each memory has for each CHO. Totals in brackets show the CHO's or memory's overall annotation count.</p>
+        <h2>Memory / Object matrix</h2>
+        <p>Number of metadata tags each memory has for each object. Totals in brackets show the object's or memory's overall annotation count.</p>
         <div class="matrix-wrap">
           <table class="matrix">
             <thead>
@@ -1631,7 +1631,7 @@ COMPARE_TEMPLATE = """
       {% elif view == 'fields' %}
       <div class="card">
         <h2>Memory / Field matrix</h2>
-        <p>Number of times each metadata field appears within each memory, regardless of CHO. Totals in brackets show the field's or memory's overall annotation count.</p>
+        <p>Number of times each metadata field appears within each memory, regardless of object. Totals in brackets show the field's or memory's overall annotation count.</p>
         <div class="matrix-wrap">
           <table class="matrix">
             <thead>
@@ -1659,7 +1659,7 @@ COMPARE_TEMPLATE = """
       </div>
       {% elif selected_cho %}
       <div class="card">
-        <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for CHO <a href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
+        <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for object <a href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
         {% if view == 'report' %}
         <a class="download-btn" href="/compare/report.csv?cho_id={{ selected_cho }}&metadata_space={{ metadata_space.name }}">Download CSV</a>
         {% for section in report_sections %}

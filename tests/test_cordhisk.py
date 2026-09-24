@@ -22,7 +22,7 @@ class WebAppTests(unittest.TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'>.txt</a>', response.data)
-        self.assertIn(b"confirm('Delete this CHO and remove its tags from all memories?')", response.data)
+        self.assertIn(b"confirm('Delete this object and remove its tags from all memories?')", response.data)
 
     def test_add_cho_metadata_dialog_removed(self):
         response = self.client.get('/')
@@ -352,7 +352,7 @@ class WebAppTests(unittest.TestCase):
         response = self.client.get('/graph')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'CORDHISK APP v3.0', response.data)
-        self.assertIn(b'CHO records', response.data)
+        self.assertIn(b'Objects', response.data)
 
     def test_edit_cho_metadata_updates_memory_text(self):
         memory = Memory(
@@ -788,7 +788,7 @@ class WebAppTests(unittest.TestCase):
             response = self.client.get('/compare?view=matrix')
             self.assertEqual(response.status_code, 200)
             page = response.data.decode()
-            self.assertIn('Memory / CHO matrix', page)
+            self.assertIn('Memory / Object matrix', page)
             self.assertIn(f'{cho_one.custom_id} (Matrix CHO One) [2]', page)
             self.assertIn(f'{cho_two.custom_id} (Matrix CHO Two) [1]', page)
             self.assertIn(f'{memory.custom_id} - Matrix memory [3]', page)

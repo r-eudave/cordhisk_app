@@ -1546,7 +1546,7 @@ def create_app(testing=False):
     redirect_kwargs["metadata_space"] = metadata_space.name
     if focus_cho:
       redirect_kwargs["focus_cho"] = focus_cho
-    return _redirect_with_notice("index", "error", "Select text and provide CHO and field before adding an annotation.", **redirect_kwargs)
+    return _redirect_with_notice("index", "error", "Select text and provide an object and field before adding an annotation.", **redirect_kwargs)
 
   @app.route("/memories/<int:memory_id>/delete", methods=["POST"])
   def delete_memory(memory_id):
@@ -1570,7 +1570,7 @@ def create_app(testing=False):
     title = request.form.get("title", "").strip()
     memory_id = request.form.get("memory_id", type=int)
     if not custom_id:
-      return _redirect_with_notice("index", "error", "CHO ID is required.", memory_id=memory_id)
+      return _redirect_with_notice("index", "error", "Object ID is required.", memory_id=memory_id)
     if session.query(CHO).filter(CHO.custom_id == custom_id).first() is not None:
       return _redirect_with_notice("index", "error", f"CHO ID '{custom_id}' already exists.", memory_id=memory_id)
 
@@ -1598,8 +1598,8 @@ def create_app(testing=False):
 
       session.delete(cho)
       session.commit()
-      return _redirect_with_notice("index", "success", f"Deleted CHO: {cho_label}.", memory_id=memory_id)
-    return _redirect_with_notice("index", "error", "CHO not found.", memory_id=memory_id)
+      return _redirect_with_notice("index", "success", f"Deleted object: {cho_label}.", memory_id=memory_id)
+    return _redirect_with_notice("index", "error", "Object not found.", memory_id=memory_id)
 
   @app.route("/graph")
   def graph():
