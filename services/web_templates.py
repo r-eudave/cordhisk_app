@@ -656,6 +656,7 @@ HTML_TEMPLATE = """
         let coordinateMap;
         let coordinateMarker;
         let selectedCoordinates;
+        let selectList;
 
         function captureSelection() {
           const selection = window.getSelection();
@@ -1062,7 +1063,7 @@ HTML_TEMPLATE = """
         }
 
         if (showMemoriesBtn && showChosBtn && memoriesPanel && chosPanel && tagsPanel) {
-          const selectList = function (target) {
+          selectList = function (target) {
             const showMemories = target === 'memories';
             const showChos = target === 'chos';
             const showTags = target === 'tags';

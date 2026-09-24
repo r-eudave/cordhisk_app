@@ -91,3 +91,19 @@ _ensure_memory_license_column()
 # =========================
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+def _rebase_memory_file_paths():
+    """Keep database records linked to the local portable data directory."""
+    changed = False
+    for memory in session.query(Memory).all():
+        filename = os.path.basename(memory.file_path or f"{memory.custom_id or memory.id}.txt")
+        portable_path = os.path.join(MEMORY_DIR, filename)
+        if os.path.exists(portable_path) and memory.file_path != portable_path:
+            memory.file_path = portable_path
+            changed = True
+    if changed:
+        session.commit()
+
+
+_rebase_memory_file_paths()

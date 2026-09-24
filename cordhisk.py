@@ -144,6 +144,20 @@ def _persist_memory_to_disk(memory, text=None):
     return memory.file_path
 
 
+def _reconcile_portable_memory_files():
+  """Relink indexed memories after a portable application folder is moved."""
+  changed = False
+  for memory in session.query(Memory).all():
+    local_path = _memory_txt_path(memory.custom_id or memory.id)
+    if not os.path.exists(local_path):
+      _write_memory_text_file(memory.custom_id or memory.id, memory.text or "")
+    if memory.file_path != local_path:
+      memory.file_path = local_path
+      changed = True
+  if changed:
+    session.commit()
+
+
 def _find_nth_occurrence(text, term, occurrence_index):
   if not text or not term:
     return -1
@@ -1064,6 +1078,7 @@ def _redirect_with_notice(endpoint, level, message, **kwargs):
 
 
 def create_app(testing=False):
+  _reconcile_portable_memory_files()
   app = Flask(__name__)
   app.config["TESTING"] = testing
   app.secret_key = "cordhisk-local-session"
