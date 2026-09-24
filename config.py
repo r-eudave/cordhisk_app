@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import tempfile
 
@@ -38,7 +39,19 @@ def _writable_data_dir(directory):
 
 
 _portable_data_dir = os.path.join(APP_ROOT, "memory_files")
-if _writable_data_dir(_portable_data_dir):
+if getattr(sys, "frozen", False) and sys.platform == "win32":
+	_user_data_root = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
+	APP_DATA_DIR = os.path.join(_user_data_root, "CORDHISK", "memory_files")
+	os.makedirs(APP_DATA_DIR, exist_ok=True)
+	for file_name in os.listdir(_portable_data_dir) if os.path.isdir(_portable_data_dir) else []:
+		source_path = os.path.join(_portable_data_dir, file_name)
+		destination_path = os.path.join(APP_DATA_DIR, file_name)
+		if os.path.isfile(source_path) and not os.path.exists(destination_path):
+			try:
+				shutil.copy2(source_path, destination_path)
+			except OSError:
+				pass
+elif _writable_data_dir(_portable_data_dir):
 	APP_DATA_DIR = _portable_data_dir
 else:
 	_user_data_root = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()

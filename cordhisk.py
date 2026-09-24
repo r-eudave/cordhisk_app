@@ -11,6 +11,7 @@ from urllib.parse import quote
 
 from flask import Flask, Response, redirect, render_template_string, request, session as flask_session, url_for
 from sqlalchemy import func
+from werkzeug.exceptions import HTTPException
 
 from config import APP_DATA_DIR
 from db import CHO, Memory, session
@@ -1085,6 +1086,8 @@ def create_app(testing=False):
 
   @app.errorhandler(Exception)
   def handle_unexpected_error(error):
+    if isinstance(error, HTTPException):
+      return error
     LOGGER.exception("Unhandled error while serving %s %s", request.method, request.path)
     if testing:
       raise error
