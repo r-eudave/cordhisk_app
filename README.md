@@ -85,10 +85,10 @@ On Windows PowerShell:
 
 ```powershell
 .\build_windows.ps1
-.\dist\CORDHISK-App-v3.0\CORDHISK-App-v3.0.exe
+.\executable_win\CORDHISK-App-v3.0.exe
 ```
 
-The generated onedir bundle includes a writable `memory_files/` directory beside the executable. On macOS, keep `CORDHISK-App-v3.0.app` and the adjacent `memory_files/` directory together inside `dist/`. This keeps the SQLite database and memory files persistent and portable with the application folder. The launcher opens the application in the default browser. Set `CORDHISK_PORT` if port 5000 is already in use.
+The generated onedir bundle includes a writable `memory_files/` directory beside the executable. On macOS, keep `CORDHISK-App-v3.0.app` and the adjacent `memory_files/` directory together inside `dist/`. On Windows, the files are placed directly inside `executable_win/`. This keeps the SQLite database and memory files persistent and portable with the application folder. The launcher opens the application in the default browser. Set `CORDHISK_PORT` if port 5000 is already in use.
 
 ## Project structure
 
