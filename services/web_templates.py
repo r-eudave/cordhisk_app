@@ -16,7 +16,7 @@ CLOSE_ON_UNLOAD_SCRIPT = """
         document.addEventListener('click', function (event) {
           var anchor = event.target.closest && event.target.closest('a[href]');
           var button = event.target.closest && event.target.closest('button');
-          var isViewButton = button && ['show-memories-btn', 'show-chos-btn', 'show-metadata-btn'].indexOf(button.id) !== -1;
+          var isViewButton = button && button.getAttribute('data-navigates') === 'true';
           if ((anchor && anchor.target !== '_blank' && !anchor.hasAttribute('download')) || isViewButton) {
             markInternalNavigation();
           }
@@ -309,8 +309,8 @@ HTML_TEMPLATE = """
               {% for space in metadata_spaces %}<option value="{{ space.name }}" {% if active_metadata_space and active_metadata_space.name == space.name %}selected{% endif %}>{{ space.name }}</option>{% endfor %}
             </select>
           </form>
-          <button type="button" id="show-memories-btn" class="{% if not focus_cho and panel != 'chos' and not is_metadata_management %}active{% endif %}">Memories</button>
-          <button type="button" id="show-chos-btn" class="{% if (focus_cho or panel == 'chos') and not is_metadata_management %}active{% endif %}">Objects</button>
+          <button type="button" id="show-memories-btn" data-navigates="{{ 'true' if is_metadata_management else 'false' }}" class="{% if not focus_cho and panel != 'chos' and not is_metadata_management %}active{% endif %}">Memories</button>
+          <button type="button" id="show-chos-btn" data-navigates="{{ 'true' if is_metadata_management else 'false' }}" class="{% if (focus_cho or panel == 'chos') and not is_metadata_management %}active{% endif %}">Objects</button>
           <a class="metadata-link{% if is_metadata_management %} active{% endif %}" id="show-metadata-btn" href="/?workspace=metadata_spaces&metadata_space={{ active_metadata_space.name }}">Metadata</a>
         </div>
         {% if is_metadata_management %}
