@@ -56,7 +56,19 @@ def _copy_missing_data(source_dir, destination_dir):
 				pass
 
 
-_portable_data_dir = os.path.join(APP_ROOT, "memory_files")
+def _portable_data_dirs():
+	directories = [os.path.join(APP_ROOT, "memory_files")]
+	if getattr(sys, "frozen", False) and sys.platform == "darwin":
+		executable_dir = os.path.dirname(os.path.abspath(sys.executable))
+		directories.append(os.path.join(executable_dir, "memory_files"))
+	return list(dict.fromkeys(directories))
+
+
+_portable_data_dirs = _portable_data_dirs()
+_portable_data_dir = next(
+	(directory for directory in _portable_data_dirs if os.path.exists(os.path.join(directory, "000_cordhisk.db"))),
+	next((directory for directory in _portable_data_dirs if os.path.isdir(directory)), _portable_data_dirs[0]),
+)
 
 if getattr(sys, "frozen", False) and sys.platform == "win32":
 	APP_DATA_DIR = _user_data_dir()
