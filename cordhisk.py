@@ -1076,7 +1076,7 @@ def create_app(testing=False):
   _reconcile_portable_memory_files()
   app = Flask(__name__)
   app.config["TESTING"] = testing
-  app.secret_key = "cordhisk-local-session"
+  app.secret_key = os.environ.get("CORDHISK_SECRET_KEY", "cordhisk-local-session")
 
   @app.errorhandler(Exception)
   def handle_unexpected_error(error):
