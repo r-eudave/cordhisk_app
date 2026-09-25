@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.pyc
+.venv/
+venv/
 
 # Database
 cordhisk.db
@@ -17,4 +19,7 @@ memory_files/
 # PyInstaller build output
 build/
 dist/
+.pyinstaller-build/
+.pyinstaller-dist/
 *.spec
+*.log
