@@ -9,6 +9,8 @@ cordhisk.db
 
 # Local data
 memory_files/
+CORDHISK_App_v3_MacOS/memory_files/
+CORDHISK_App_v3_Win/memory_files/
 
 # OS
 .DS_Store
