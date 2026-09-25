@@ -57,12 +57,16 @@ def _copy_missing_data(source_dir, destination_dir):
 				pass
 
 
-def _database_has_memories(path):
+def _memory_count(path):
 	try:
 		with sqlite3.connect(path) as connection:
-			return connection.execute("SELECT COUNT(*) FROM memories").fetchone()[0] > 0
+			return connection.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
 	except (OSError, sqlite3.Error):
-		return False
+		return -1
+
+
+def _database_has_memories(path):
+	return _memory_count(path) > 0
 
 
 def _copy_data_for_empty_database(source_dir, destination_dir):
@@ -94,18 +98,20 @@ def _portable_data_dirs():
 
 
 _portable_data_dirs = _portable_data_dirs()
-_portable_data_dir = next(
-	(directory for directory in _portable_data_dirs if os.path.exists(os.path.join(directory, "000_cordhisk.db"))),
-	next((directory for directory in _portable_data_dirs if os.path.isdir(directory)), _portable_data_dirs[0]),
+_user_data_dir_path = _user_data_dir()
+_data_candidates = _portable_data_dirs + [_user_data_dir_path]
+_portable_data_dir = max(
+	_data_candidates,
+	key=lambda directory: _memory_count(os.path.join(directory, "000_cordhisk.db")),
 )
 
 if getattr(sys, "frozen", False) and sys.platform == "win32":
-	APP_DATA_DIR = _user_data_dir()
+	APP_DATA_DIR = _user_data_dir_path
 	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
 	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
 elif _writable_data_dir(_portable_data_dir):
 	APP_DATA_DIR = _portable_data_dir
 else:
-	APP_DATA_DIR = _user_data_dir()
+	APP_DATA_DIR = _user_data_dir_path
 	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
 	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
