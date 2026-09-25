@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $AppName = 'CORDHISK-App-v3.0'
-$OutputDir = 'executable_win'
+$OutputDir = 'CORDHISK_App_v3_Win'
 $StageDir = '.pyinstaller-dist'
 $WorkDir = '.pyinstaller-build'
 

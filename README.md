@@ -78,19 +78,19 @@ On macOS:
 ```bash
 chmod +x build_macos.sh
 ./build_macos.sh
-open dist/CORDHISK-App-v3.0.app
+open CORDHISK_App_v3_MacOS/CORDHISK-App-v3.0.app
 ```
 
 On Windows PowerShell:
 
 ```powershell
 .\build_windows.ps1
-.\executable_win\CORDHISK-App-v3.0.exe
+.\CORDHISK_App_v3_Win\CORDHISK-App-v3.0.exe
 ```
 
-The generated onedir bundle includes a writable `memory_files/` directory beside the executable. On macOS, keep `CORDHISK-App-v3.0.app` and the adjacent `memory_files/` directory together inside `dist/`. On Windows, the files are placed directly inside `executable_win/`. This keeps the SQLite database and memory files persistent and portable with the application folder. The launcher opens the application in the default browser. Set `CORDHISK_PORT` if port 5000 is already in use.
+The generated onedir bundle includes a writable `memory_files/` directory beside the executable. On macOS, keep `CORDHISK-App-v3.0.app` and the adjacent `memory_files/` directory together inside `CORDHISK_App_v3_MacOS/`. On Windows, the files are placed directly inside `CORDHISK_App_v3_Win/`. This keeps the SQLite database and memory files persistent and portable with the application folder. The launcher opens the application in the default browser. Set `CORDHISK_PORT` if port 5000 is already in use.
 
-Keep the complete Windows `executable_win/` folder together when moving the application; do not copy only the `.exe`. If the browser shows an internal server error, close the application and inspect `executable_win/cordhisk.log`, then share that traceback when reporting the problem.
+Keep the complete Windows `CORDHISK_App_v3_Win/` folder together when moving the application; do not copy only the `.exe`. If the browser shows an internal server error, close the application and inspect `CORDHISK_App_v3_Win/cordhisk.log`, then share that traceback when reporting the problem.
 
 If Windows prevents writing beside the executable, CORDHISK automatically uses `%LOCALAPPDATA%\CORDHISK\memory_files` for its database and memory files, and `%LOCALAPPDATA%\CORDHISK\cordhisk.log` for diagnostics.
 
