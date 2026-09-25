@@ -1704,14 +1704,14 @@ COMPARE_TEMPLATE = """
               <tr>
                 <th>Memory</th>
                 {% for column in matrix_cho_columns %}
-                <th><a href="/?focus_cho={{ column.key }}">{{ column.label }} [{{ column.total }}]</a></th>
+                <th><a target="_top" href="/?focus_cho={{ column.key }}">{{ column.label }} [{{ column.total }}]</a></th>
                 {% endfor %}
               </tr>
             </thead>
             <tbody>
               {% for row in matrix_memory_rows %}
               <tr>
-                <td><a href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
+                <td><a target="_top" href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
                 {% for column in matrix_cho_columns %}
                 <td>{{ row['values'].get(column.key, 0) }}</td>
                 {% endfor %}
@@ -1740,7 +1740,7 @@ COMPARE_TEMPLATE = """
             <tbody>
               {% for row in matrix_field_memory_rows %}
               <tr>
-                <td><a href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
+                <td><a target="_top" href="/?memory_id={{ row.id }}">{{ row.label }} [{{ row.total }}]</a></td>
                 {% for column in matrix_field_columns %}
                 <td>{{ row['values'].get(column.key, 0) }}</td>
                 {% endfor %}
@@ -1754,7 +1754,7 @@ COMPARE_TEMPLATE = """
       </div>
       {% elif selected_cho %}
       <div class="card">
-        <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for object <a href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
+        <h2>{% if view == 'report' %}Report{% else %}Comparison{% endif %} for object <a target="_top" href="/?focus_cho={{ selected_cho }}">{{ selected_cho }}</a></h2>
         {% if view == 'report' %}
         <a class="download-btn" href="/compare/report.csv?cho_id={{ selected_cho }}&metadata_space={{ metadata_space.name }}">Download CSV</a>
         {% for section in report_sections %}
@@ -1767,7 +1767,7 @@ COMPARE_TEMPLATE = """
               <tr>
                 <td class="report-count">{{ row.count }}</td>
                 <td class="report-instance">{{ row.value }}</td>
-                <td class="report-memories memory-links">{% for memory in row.memories %}<a href="/?memory_id={{ memory.id }}&filter_cho={{ selected_cho }}">{{ memory.label }}</a>{% endfor %}</td>
+                <td class="report-memories memory-links">{% for memory in row.memories %}<a target="_top" href="/?memory_id={{ memory.id }}&filter_cho={{ selected_cho }}">{{ memory.label }}</a>{% endfor %}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -1783,7 +1783,7 @@ COMPARE_TEMPLATE = """
               <tr>
                 <th>Field</th>
                 {% for memory in memory_columns %}
-                <th><a href="/?memory_id={{ memory.id }}&filter_cho={{ selected_cho }}">{{ memory.label }}</a></th>
+                <th><a target="_top" href="/?memory_id={{ memory.id }}&filter_cho={{ selected_cho }}">{{ memory.label }}</a></th>
                 {% endfor %}
               </tr>
             </thead>
@@ -1808,6 +1808,16 @@ COMPARE_TEMPLATE = """
       </div>
       {% endif %}
     </div>
+<script>
+  if (window.top !== window) {
+    document.addEventListener('click', function (event) {
+      var link = event.target.closest && event.target.closest('a[target="_top"]');
+      if (link) {
+        window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*');
+      }
+    }, true);
+  }
+</script>
 {{ close_on_unload_script }}
   </body>
 </html>
