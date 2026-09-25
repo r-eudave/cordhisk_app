@@ -7,7 +7,9 @@ import tempfile
 
 
 def _configure_logging():
-    if getattr(sys, "frozen", False):
+    if getattr(sys, "frozen", False) and sys.platform == "darwin":
+        application_dir = os.path.join(os.path.expanduser("~/Library/Application Support"), "CORDHISK")
+    elif getattr(sys, "frozen", False):
         application_dir = os.path.dirname(os.path.abspath(sys.executable))
     else:
         application_dir = os.path.dirname(os.path.abspath(__file__))
