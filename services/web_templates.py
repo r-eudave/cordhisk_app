@@ -40,7 +40,16 @@ CLOSE_ON_UNLOAD_SCRIPT = """
         });
         window.addEventListener('pagehide', function (event) {
           if (allowShutdownOnClose && !event.persisted) {
-            navigator.sendBeacon('/shutdown');
+            var shutdownRequest = new Request('/shutdown', {
+              method: 'POST',
+              credentials: 'same-origin',
+              keepalive: true,
+            });
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon('/shutdown');
+            } else {
+              fetch(shutdownRequest).catch(function () {});
+            }
           }
         });
       })();
