@@ -11,5 +11,8 @@ rm -rf "$OUTPUT_DIR" dist
 rm -rf "$OUTPUT_DIR/$APP_NAME"
 rm -rf "$OUTPUT_DIR/memory_files"
 cp -R memory_files "$OUTPUT_DIR/memory_files"
+rm -rf "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/memory_files"
+mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources"
+cp -R memory_files "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/memory_files"
 printf '\nBuilt: %s/%s.app with %s/memory_files\n' "$OUTPUT_DIR" "$APP_NAME" "$OUTPUT_DIR"
 printf 'Run:   open %s/%s.app\n' "$OUTPUT_DIR" "$APP_NAME"

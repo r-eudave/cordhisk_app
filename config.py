@@ -93,6 +93,8 @@ def _portable_data_dirs():
 	directories = [os.path.join(APP_ROOT, "memory_files")]
 	if getattr(sys, "frozen", False) and sys.platform == "darwin":
 		executable_dir = os.path.dirname(os.path.abspath(sys.executable))
+		contents_dir = os.path.dirname(executable_dir)
+		directories.append(os.path.join(contents_dir, "Resources", "memory_files"))
 		directories.append(os.path.join(executable_dir, "memory_files"))
 	return list(dict.fromkeys(directories))
 
