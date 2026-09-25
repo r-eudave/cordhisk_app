@@ -8,9 +8,16 @@ CLOSE_ON_UNLOAD_SCRIPT = """
         var markInternalNavigation = function () {
           allowShutdownOnClose = false;
         };
+        window.addEventListener('message', function (event) {
+          if (event.data && event.data.type === 'cordhisk-internal-navigation') {
+            markInternalNavigation();
+          }
+        });
         document.addEventListener('click', function (event) {
           var anchor = event.target.closest && event.target.closest('a[href]');
-          if (anchor && anchor.target !== '_blank' && !anchor.hasAttribute('download')) {
+          var button = event.target.closest && event.target.closest('button');
+          var isViewButton = button && ['show-memories-btn', 'show-chos-btn', 'show-metadata-btn'].indexOf(button.id) !== -1;
+          if ((anchor && anchor.target !== '_blank' && !anchor.hasAttribute('download')) || isViewButton) {
             markInternalNavigation();
           }
         }, true);
@@ -1661,7 +1668,7 @@ COMPARE_TEMPLATE = """
         <p>Review metadata fields, instances, counts, and related memories for one object.</p>
       </div>
       <div class="card">
-        <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top"{% endif %}>
+        <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top" onsubmit="window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*');"{% endif %}>
           {% if embedded %}<input type="hidden" name="workspace" value="compare">{% endif %}
           <input type="hidden" name="metadata_space" value="{{ metadata_space.name }}">
           <label>Object</label>
