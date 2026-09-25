@@ -167,21 +167,3 @@ def preserve_verbatim_copy(editable_text, original_text):
     if not original_match:
         return editable
     return editable.rstrip("\n") + "\n\n" + original_match.group(0).rstrip("\n") + "\n"
-
-def rebuild_from_spans(clean_text, spans):
-    from collections import OrderedDict
-
-    content = rebuild_text_from_spans(clean_text, spans)
-
-    metadata = OrderedDict()
-    for s in spans:
-        if s.get("type") == MetadataType.MEMORY.value:
-            field = s.get("field")
-            value = s.get("value")
-
-            if field and value:
-                metadata[field] = value  # automatic dedup
-
-    block = build_memory_block(metadata)
-
-    return block + content.lstrip("\n"), metadata

@@ -609,12 +609,6 @@ def _build_graph_data(selected_memory_id=None, focus_cho=None, metadata_space=No
     edge_ids.add(key)
     edges.append((from_node, to_node))
 
-  def matches_cho(metadata_items, cho_id):
-    for md in metadata_items:
-      if md.get("type") == MetadataType.CHO.value and str(md.get("cho")) == str(cho_id):
-        return True
-    return False
-
   if focus_cho:
     target_cho = next((item for item in cho_rows if str(item.custom_id) == str(focus_cho) or str(item.id) == str(focus_cho)), None)
     if target_cho is None:
