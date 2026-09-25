@@ -4,8 +4,8 @@ Installation
 ------------
 1. Extract this complete CORDHISK_App_v3_MacOS folder.
 2. Keep CORDHISK-App-v3.0.app inside this folder.
-3. The app includes a seed memory database and memory files.
-4. Your own memory_files folder may remain beside the app, but do not place it inside Contents or MacOS.
+3. The public package starts with an empty memory_files folder.
+4. To use existing data, copy your private memory_files folder beside the app, but do not place it inside Contents or MacOS.
 
 First launch after downloading
 ------------------------------
