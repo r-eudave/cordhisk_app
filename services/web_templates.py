@@ -192,6 +192,8 @@ HTML_TEMPLATE = """
       .side-btn:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .side-btn.close-app-btn { background: #7f1d1d; color: white; }
       .side-btn.close-app-btn:hover { background: #991b1b; color: white; }
+      .close-app-top { flex: 0 0 auto; min-height: 30px; padding: 6px 9px; border: 0; border-radius: 4px; color: white; background: #7f1d1d; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+      .close-app-top:hover { background: #991b1b; }
       .side-btn.alt, .side-btn.alt:visited { color: #dbeafe; }
       .side-btn.alt:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .contextual-action { display: block; width: 100%; box-sizing: border-box; height: 28px; margin: 0; padding: 5px 8px; border: 1px solid #e69f00; border-radius: 4px; color: #003b5c; background: #ffffff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; text-decoration: none; }
@@ -301,6 +303,7 @@ HTML_TEMPLATE = """
       <aside class="sidebar">
         <div class="app-heading">
           <button type="button" class="menu-toggle" id="toggle-menu" aria-label="Open menu" title="Open menu">Menu</button>
+          <button type="button" id="close-app-btn" class="close-app-top" title="Close the app safely">Close app</button>
           <h2>CORDHISK APP v3.0</h2>
         </div>
         <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects.</p>
@@ -309,7 +312,6 @@ HTML_TEMPLATE = """
             <a class="side-btn" href="/?workspace=search">Search text in memories</a>
             <a class="side-btn" href="/?workspace=map">Open map for georeferenced memories</a>
             <a class="side-btn" href="/?workspace=compare">Quantitative report</a>
-            <button type="button" id="close-app-btn" class="side-btn close-app-btn" title="Close the app safely">Close app</button>
           </div>
         </div>
         <div class="list-selector">
