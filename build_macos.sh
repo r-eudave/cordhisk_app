@@ -11,6 +11,7 @@ rm -rf "$OUTPUT_DIR" dist
 rm -rf "$OUTPUT_DIR/$APP_NAME"
 rm -rf "$OUTPUT_DIR/memory_files"
 cp -R memory_files "$OUTPUT_DIR/memory_files"
+cp README_MACOS.txt "$OUTPUT_DIR/README_MACOS.txt"
 rm -rf "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/memory_files"
 mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources"
 cp -R memory_files "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/memory_files"
