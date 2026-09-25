@@ -38,22 +38,31 @@ def _writable_data_dir(directory):
 		return False
 
 
-_portable_data_dir = os.path.join(APP_ROOT, "memory_files")
-if getattr(sys, "frozen", False) and sys.platform == "win32":
-	_user_data_root = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
-	APP_DATA_DIR = os.path.join(_user_data_root, "CORDHISK", "memory_files")
-	os.makedirs(APP_DATA_DIR, exist_ok=True)
-	for file_name in os.listdir(_portable_data_dir) if os.path.isdir(_portable_data_dir) else []:
-		source_path = os.path.join(_portable_data_dir, file_name)
-		destination_path = os.path.join(APP_DATA_DIR, file_name)
+def _user_data_dir():
+	if sys.platform == "darwin":
+		return os.path.join(os.path.expanduser("~/Library/Application Support"), "CORDHISK", "memory_files")
+	return os.path.join(os.environ.get("LOCALAPPDATA") or tempfile.gettempdir(), "CORDHISK", "memory_files")
+
+
+def _copy_missing_data(source_dir, destination_dir):
+	os.makedirs(destination_dir, exist_ok=True)
+	for file_name in os.listdir(source_dir) if os.path.isdir(source_dir) else []:
+		source_path = os.path.join(source_dir, file_name)
+		destination_path = os.path.join(destination_dir, file_name)
 		if os.path.isfile(source_path) and not os.path.exists(destination_path):
 			try:
 				shutil.copy2(source_path, destination_path)
 			except OSError:
 				pass
+
+
+_portable_data_dir = os.path.join(APP_ROOT, "memory_files")
+
+if getattr(sys, "frozen", False) and sys.platform == "win32":
+	APP_DATA_DIR = _user_data_dir()
+	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
 elif _writable_data_dir(_portable_data_dir):
 	APP_DATA_DIR = _portable_data_dir
 else:
-	_user_data_root = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
-	APP_DATA_DIR = os.path.join(_user_data_root, "CORDHISK", "memory_files")
-	os.makedirs(APP_DATA_DIR, exist_ok=True)
+	APP_DATA_DIR = _user_data_dir()
+	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
