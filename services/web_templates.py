@@ -303,7 +303,7 @@ HTML_TEMPLATE = """
       <aside class="sidebar">
         <div class="app-heading">
           <button type="button" class="menu-toggle" id="toggle-menu" aria-label="Open menu" title="Open menu">Menu</button>
-          <button type="button" id="close-app-btn" class="close-app-top" title="Close the app safely">Close app</button>
+          <button type="button" id="close-app-btn" class="close-app-top" title="Close the app safely">Close</button>
           <h2>CORDHISK APP v3.0</h2>
         </div>
         <p class="sidebar-subtitle">Memories, metadata, and cultural heritage objects.</p>

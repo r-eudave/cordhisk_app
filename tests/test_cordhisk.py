@@ -27,7 +27,7 @@ class WebAppTests(unittest.TestCase):
     def test_index_has_safe_close_button_and_confirmation(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Close app', response.data)
+        self.assertIn(b'>Close<', response.data)
         self.assertIn(b"Are you sure you want to close CORDHISK?", response.data)
 
     def test_shutdown_route_stops_the_app_server(self):
