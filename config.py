@@ -1,5 +1,6 @@
 import os
 import shutil
+import sqlite3
 import sys
 import tempfile
 
@@ -56,6 +57,34 @@ def _copy_missing_data(source_dir, destination_dir):
 				pass
 
 
+def _database_has_memories(path):
+	try:
+		with sqlite3.connect(path) as connection:
+			return connection.execute("SELECT COUNT(*) FROM memories").fetchone()[0] > 0
+	except (OSError, sqlite3.Error):
+		return False
+
+
+def _copy_data_for_empty_database(source_dir, destination_dir):
+	source_database = os.path.join(source_dir, "000_cordhisk.db")
+	destination_database = os.path.join(destination_dir, "000_cordhisk.db")
+	if (
+		os.path.isfile(source_database)
+		and _database_has_memories(source_database)
+		and os.path.isfile(destination_database)
+		and not _database_has_memories(destination_database)
+	):
+		os.makedirs(destination_dir, exist_ok=True)
+		for file_name in os.listdir(source_dir):
+			source_path = os.path.join(source_dir, file_name)
+			destination_path = os.path.join(destination_dir, file_name)
+			if os.path.isfile(source_path):
+				try:
+					shutil.copy2(source_path, destination_path)
+				except OSError:
+					pass
+
+
 def _portable_data_dirs():
 	directories = [os.path.join(APP_ROOT, "memory_files")]
 	if getattr(sys, "frozen", False) and sys.platform == "darwin":
@@ -73,8 +102,10 @@ _portable_data_dir = next(
 if getattr(sys, "frozen", False) and sys.platform == "win32":
 	APP_DATA_DIR = _user_data_dir()
 	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
+	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
 elif _writable_data_dir(_portable_data_dir):
 	APP_DATA_DIR = _portable_data_dir
 else:
 	APP_DATA_DIR = _user_data_dir()
 	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
+	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
