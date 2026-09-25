@@ -81,6 +81,18 @@ chmod +x build_macos.sh
 open CORDHISK_App_v3_MacOS/CORDHISK-App-v3.0.app
 ```
 
+After extracting the macOS ZIP and copying a private `memory_files/` folder beside the app, use these commands for a clean first launch:
+
+```bash
+APP_DIR="$HOME/Downloads/CORDHISK_App_v3_MacOS"
+pkill -f 'CORDHISK-App-v3.0|cordhisk.py|launcher.py' 2>/dev/null || true
+rm -rf "$HOME/Library/Application Support/CORDHISK"
+xattr -dr com.apple.quarantine "$APP_DIR"
+open -n "$APP_DIR/CORDHISK-App-v3.0.app"
+```
+
+Replace `Downloads` with `Desktop` if that is where the extracted folder is located. The `rm -rf` command clears only CORDHISK's fallback data; back it up first if needed.
+
 On Windows PowerShell:
 
 ```powershell

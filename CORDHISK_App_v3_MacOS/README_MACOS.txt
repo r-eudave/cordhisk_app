@@ -9,11 +9,27 @@ Installation
 
 First launch after downloading
 ------------------------------
-macOS may quarantine applications downloaded from the internet. If the app says it is damaged, open Terminal and run:
+After extracting the ZIP into Downloads, put your private memory_files folder beside the app:
 
-xattr -dr com.apple.quarantine "/path/to/CORDHISK_App_v3_MacOS"
+Downloads/CORDHISK_App_v3_MacOS/
+	CORDHISK-App-v3.0.app/
+	memory_files/000_cordhisk.db
 
-Replace /path/to with the actual location of this folder. Alternatively, Control-click the app, choose Open, and confirm Open.
+Open Terminal and paste these commands exactly:
+
+APP_DIR="$HOME/Downloads/CORDHISK_App_v3_MacOS"
+pkill -f 'CORDHISK-App-v3.0|cordhisk.py|launcher.py' 2>/dev/null || true
+rm -rf "$HOME/Library/Application Support/CORDHISK"
+xattr -dr com.apple.quarantine "$APP_DIR"
+open -n "$APP_DIR/CORDHISK-App-v3.0.app"
+
+If the folder is on the Desktop, replace `Downloads` with `Desktop` in `APP_DIR`.
+
+The `rm -rf` command removes only CORDHISK's fallback data. Back it up first if it contains data you need.
+
+If the app says it is damaged, the usual cause is quarantine or launching an older copy. Confirm that the app is being launched from `APP_DIR`, not from AppTranslocation or another old copy.
+
+Alternatively, Control-click the app, choose Open, and confirm Open.
 
 The app stores logs and writable data outside the signed app bundle at:
 
