@@ -209,6 +209,11 @@ HTML_TEMPLATE = """
       .menu-toggle.active { background: #009e73; }
       .sidebar-menu { position: absolute; top: 72px; left: 20px; right: 20px; z-index: 20; padding: 10px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 8px; background: rgba(15, 59, 90, 0.98); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28); }
       .sidebar-menu.hidden { display: none; }
+      .share-link-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.2); }
+      .share-link-row label { display: block; margin-bottom: 6px; color: #dbeafe; font-size: 12px; font-weight: 600; }
+      .share-link-controls { display: flex; gap: 6px; }
+      .share-link-controls input { flex: 1 1 auto; min-width: 0; margin: 0; padding: 6px 8px; border: 0; border-radius: 4px; background: #f8fafc; color: #17212b; font-size: 12px; }
+      .share-link-controls .side-btn { flex: 0 0 auto; width: auto; }
       .workspace-heading { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
       .workspace-heading h4 { margin: 0; }
       .workspace-identity { color: #475569; font-size: 13px; font-weight: 600; }
@@ -313,6 +318,15 @@ HTML_TEMPLATE = """
             <a class="side-btn" href="/?workspace=map">Open map for georeferenced memories</a>
             <a class="side-btn" href="/?workspace=compare">Quantitative report</a>
           </div>
+          {% if lan_share_url %}
+          <div class="share-link-row">
+            <label for="share-link-input">Share with others on this network</label>
+            <div class="share-link-controls">
+              <input type="text" id="share-link-input" readonly value="{{ lan_share_url }}">
+              <button type="button" id="copy-share-link-btn" class="side-btn alt">Copy link</button>
+            </div>
+          </div>
+          {% endif %}
         </div>
         <div class="list-selector">
           <form method="get" action="/" style="display: contents;">
@@ -936,6 +950,29 @@ HTML_TEMPLATE = """
           });
           window.addEventListener('resize', syncMenu);
           syncMenu();
+        }
+
+        const copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+        const shareLinkInput = document.getElementById('share-link-input');
+        if (copyShareLinkBtn && shareLinkInput) {
+          copyShareLinkBtn.addEventListener('click', function () {
+            shareLinkInput.select();
+            shareLinkInput.setSelectionRange(0, shareLinkInput.value.length);
+            const restoreLabel = copyShareLinkBtn.textContent;
+            const showCopied = function () {
+              copyShareLinkBtn.textContent = 'Copied!';
+              window.setTimeout(function () { copyShareLinkBtn.textContent = restoreLabel; }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(shareLinkInput.value).then(showCopied).catch(function () {
+                document.execCommand('copy');
+                showCopied();
+              });
+            } else {
+              document.execCommand('copy');
+              showCopied();
+            }
+          });
         }
 
         if (closeAppButton) {

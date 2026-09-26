@@ -4,6 +4,7 @@ import io
 import logging
 import os
 import re
+import socket
 import tempfile
 import uuid
 import xml.etree.ElementTree as ET
@@ -1078,6 +1079,22 @@ def create_app(testing=False):
   app.config["TESTING"] = testing
   app.secret_key = os.environ.get("CORDHISK_SECRET_KEY", "cordhisk-local-session")
 
+  def _lan_share_url():
+    if os.environ.get("CORDHISK_HOST", "0.0.0.0") not in {"0.0.0.0", "::"}:
+      return None
+    try:
+      with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("8.8.8.8", 80))
+        lan_ip = s.getsockname()[0]
+    except OSError:
+      return None
+    port = os.environ.get("CORDHISK_PORT", "5000")
+    return f"http://{lan_ip}:{port}/"
+
+  @app.context_processor
+  def _inject_lan_share_url():
+    return {"lan_share_url": _lan_share_url()}
+
   @app.errorhandler(Exception)
   def handle_unexpected_error(error):
     if isinstance(error, HTTPException):
@@ -1972,4 +1989,12 @@ if __name__ == "__main__":
   host = os.environ.get("CORDHISK_HOST", "0.0.0.0")
   port = int(os.environ.get("CORDHISK_PORT", "5000"))
   debug = os.environ.get("CORDHISK_DEBUG", "0").lower() in {"1", "true", "yes", "on"}
+  if host in {"0.0.0.0", "::"}:
+    try:
+      with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("8.8.8.8", 80))
+        lan_ip = s.getsockname()[0]
+      print(f"Also reachable on your network at http://{lan_ip}:{port}/")
+    except OSError:
+      pass
   app.run(host=host, port=port, debug=debug, use_reloader=False)

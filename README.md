@@ -19,6 +19,17 @@ The development server uses port 5000 by default. Set `CORDHISK_PORT` to use ano
 
 Open http://127.0.0.1:5000/ in a browser. The application runs with Flask's development server.
 
+### Sharing over the local network
+
+By default the app binds to `0.0.0.0`, so it listens on all network interfaces, not just `127.0.0.1`. This means other computers on the same network (Wi-Fi/LAN) can reach it too, as long as:
+
+1. The host machine's firewall allows inbound connections on the chosen port (5000 by default).
+2. Other users open `http://<host-machine-ip>:5000/` in their browser, where `<host-machine-ip>` is the IP address of the machine running CORDHISK (find it with `ipconfig getifaddr en0` on macOS or `ipconfig` on Windows).
+
+To restrict access to only the local machine instead, set `CORDHISK_HOST=127.0.0.1` before starting the app.
+
+Note: Flask's built-in development server used here is not hardened for multi-user production use (no concurrency safeguards, no HTTPS, no authentication). It is fine for sharing on a trusted home/office network, but avoid exposing the port to the public internet.
+
 ## Capabilities
 
 - Create, edit, delete, and browse memories and CHOs.
