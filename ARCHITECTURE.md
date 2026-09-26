@@ -184,7 +184,7 @@ Focused validation also covers Metadata Space persistence, CSV round trips, nest
 - `memory_files/` contains the SQLite database and application-managed text files.
 - `tests/` contains automated tests.
 
-For local development, the minimum requirements are Flask and SQLAlchemy, installed from `requirements.txt`. The project is designed for a local, single-user or small-team workflow using the Flask development server. For public deployment, it should be placed behind an appropriate production WSGI server and configured with standard security, backup, and access-control practices.
+For local development, the minimum requirements are Flask and SQLAlchemy, installed from `requirements.txt`. The project is designed for a local, single-user or small-team workflow using the Flask development server. By default the server binds to all network interfaces, so it can be shared with other machines on the same LAN; only the host machine itself is able to shut the shared server down. For public deployment, it should be placed behind an appropriate production WSGI server and configured with standard security, backup, and access-control practices.
 
 ## 11. Summary
 

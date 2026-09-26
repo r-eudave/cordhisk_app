@@ -1,4 +1,4 @@
-CORDHISK App v3.0.5 for macOS
+CORDHISK App v3.0.10 for macOS
 
 Installation
 ------------
@@ -31,11 +31,17 @@ If the app says it is damaged, the usual cause is quarantine or launching an old
 
 Alternatively, Control-click the app, choose Open, and confirm Open.
 
-The app stores logs and writable data outside the signed app bundle at:
+The app is portable: the database and memory files live in the `memory_files/` folder beside `CORDHISK-App-v3.0.app`, not inside the signed bundle. If that folder cannot be written to (e.g. the app is run from a read-only location), CORDHISK automatically falls back to:
 
 ~/Library/Application Support/CORDHISK/
 
+The app log (`cordhisk.log`) is always written to `~/Library/Application Support/CORDHISK/`, even when the memory data itself is portable.
+
 Do not add or modify files inside CORDHISK-App-v3.0.app after downloading, because changing the signed bundle can make macOS report that it is damaged.
+
+Sharing over the local network
+-------------------------------
+By default the app listens on all network interfaces, so other computers on the same Wi-Fi/LAN can open it at `http://<this-Mac's-IP>:5000/`. The first time it runs, macOS may prompt "Do you want the application CORDHISK-App-v3.0 to accept incoming network connections?" — choose Allow, otherwise other devices cannot reach it. Only this Mac can close the shared app (via the in-app Close button or closing its own tab); other connected devices cannot shut it down. To restrict the app to this machine only, set `CORDHISK_HOST=127.0.0.1` before launching it from Terminal.
 
 Requirements
 ------------

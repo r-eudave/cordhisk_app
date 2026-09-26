@@ -6,7 +6,7 @@ For a complete functional and technical description suitable for project documen
 
 ## Run locally
 
-Requires Python 3.10 or later.
+Requires Python 3.11 or later.
 
 ```bash
 git clone https://github.com/r-eudave/cordhisk_app.git
@@ -27,6 +27,8 @@ By default the app binds to `0.0.0.0`, so it listens on all network interfaces, 
 2. Other users open `http://<host-machine-ip>:5000/` in their browser, where `<host-machine-ip>` is the IP address of the machine running CORDHISK (find it with `ipconfig getifaddr en0` on macOS or `ipconfig` on Windows).
 
 To restrict access to only the local machine instead, set `CORDHISK_HOST=127.0.0.1` before starting the app.
+
+Only the host machine running the server can close it (via the in-app Close button, or by closing its own browser tab). Other devices connected over the network cannot shut down the shared app.
 
 Note: Flask's built-in development server used here is not hardened for multi-user production use (no concurrency safeguards, no HTTPS, no authentication). It is fine for sharing on a trusted home/office network, but avoid exposing the port to the public internet.
 
