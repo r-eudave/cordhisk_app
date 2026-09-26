@@ -30,6 +30,8 @@ To restrict access to only the local machine instead, set `CORDHISK_HOST=127.0.0
 
 Only the host machine running the server can close it (via the in-app Close button, or by closing its own browser tab). Other devices connected over the network cannot shut down the shared app.
 
+On macOS, the first time the app tries to accept a connection, the system may show "Do you want the application ... to accept incoming network connections?" — choose **Allow**. If this prompt is missed, denied, or the app is otherwise unreachable from other devices despite running, check System Settings > Network > Firewall > Options... and set the app (or the Python interpreter running it) to "Allow incoming connections", then relaunch it.
+
 Note: Flask's built-in development server used here is not hardened for multi-user production use (no concurrency safeguards, no HTTPS, no authentication). It is fine for sharing on a trusted home/office network, but avoid exposing the port to the public internet.
 
 ## Capabilities

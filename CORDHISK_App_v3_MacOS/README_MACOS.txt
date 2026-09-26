@@ -1,4 +1,4 @@
-CORDHISK App v3.0.10 for macOS
+CORDHISK App v3.0.11 for macOS
 
 Installation
 ------------
@@ -42,6 +42,8 @@ Do not add or modify files inside CORDHISK-App-v3.0.app after downloading, becau
 Sharing over the local network
 -------------------------------
 By default the app listens on all network interfaces, so other computers on the same Wi-Fi/LAN can open it at `http://<this-Mac's-IP>:5000/`. The first time it runs, macOS may prompt "Do you want the application CORDHISK-App-v3.0 to accept incoming network connections?" — choose Allow, otherwise other devices cannot reach it. Only this Mac can close the shared app (via the in-app Close button or closing its own tab); other connected devices cannot shut it down. To restrict the app to this machine only, set `CORDHISK_HOST=127.0.0.1` before launching it from Terminal.
+
+If the prompt above was missed, denied, or other devices still cannot reach the app: open System Settings > Network > Firewall > Options..., find CORDHISK-App-v3.0 in the list (add it with the + button if it is missing), and set it to "Allow incoming connections". Then quit and relaunch the app.
 
 Requirements
 ------------
