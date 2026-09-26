@@ -99,21 +99,23 @@ def _portable_data_dirs():
 	return list(dict.fromkeys(directories))
 
 
+def _best_data_dir(directories):
+	return max(
+		directories,
+		key=lambda directory: _memory_count(os.path.join(directory, "000_cordhisk.db")),
+	)
+
+
 _portable_data_dirs = _portable_data_dirs()
 _user_data_dir_path = _user_data_dir()
-_data_candidates = _portable_data_dirs + [_user_data_dir_path]
-_portable_data_dir = max(
-	_data_candidates,
-	key=lambda directory: _memory_count(os.path.join(directory, "000_cordhisk.db")),
-)
+_portable_data_dir = _best_data_dir(_portable_data_dirs)
+_source_data_dir = _best_data_dir(_portable_data_dirs + [_user_data_dir_path])
 
-if getattr(sys, "frozen", False) and sys.platform == "win32":
-	APP_DATA_DIR = _user_data_dir_path
-	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
-	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
-elif _writable_data_dir(_portable_data_dir):
+if _writable_data_dir(_portable_data_dir):
 	APP_DATA_DIR = _portable_data_dir
 else:
 	APP_DATA_DIR = _user_data_dir_path
-	_copy_missing_data(_portable_data_dir, APP_DATA_DIR)
-	_copy_data_for_empty_database(_portable_data_dir, APP_DATA_DIR)
+
+if _source_data_dir != APP_DATA_DIR:
+	_copy_missing_data(_source_data_dir, APP_DATA_DIR)
+	_copy_data_for_empty_database(_source_data_dir, APP_DATA_DIR)
