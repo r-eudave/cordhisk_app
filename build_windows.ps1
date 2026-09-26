@@ -9,7 +9,7 @@ Remove-Item $OutputDir, $StageDir, $WorkDir, 'dist' -Recurse -Force -ErrorAction
 
 & $PythonBin -m PyInstaller --noconfirm --clean --onedir --windowed --name $AppName `
 	--distpath $StageDir --workpath $WorkDir --specpath $WorkDir `
-	--exclude-module PyQt5 --exclude-module PySide6 --exclude-module PyQt6 --exclude-module tkinter `
+	--exclude-module PyQt5 --exclude-module PySide6 --exclude-module PyQt6 --exclude-module tkinter --exclude-module setuptools `
 	launcher.py
 
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
