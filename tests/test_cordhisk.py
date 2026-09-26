@@ -4,6 +4,7 @@ import re
 import unittest
 import uuid
 
+from config import APP_DATA_DIR
 from db import CHO, Memory, session
 from cordhisk import _build_graph_data, create_app
 
@@ -205,8 +206,8 @@ class WebAppTests(unittest.TestCase):
         )
         session.add(memory)
         session.commit()
-        _persisted_path = os.path.join(os.path.dirname(__file__), '..', 'memory_files', f'{old_id}.txt')
-        memory.file_path = os.path.abspath(_persisted_path)
+        persisted_path = os.path.join(APP_DATA_DIR, f'{old_id}.txt')
+        memory.file_path = persisted_path
         with open(memory.file_path, 'w', encoding='utf-8') as handle:
             handle.write(memory.text)
         session.commit()
@@ -223,7 +224,7 @@ class WebAppTests(unittest.TestCase):
             self.assertIn(f'<dc:identifier type="memory">{new_id}</dc:identifier>', updated.text)
             self.assertTrue(updated.file_path.endswith(f'{new_id}.txt'))
             self.assertTrue(os.path.exists(updated.file_path))
-            self.assertFalse(os.path.exists(os.path.abspath(_persisted_path)))
+            self.assertFalse(os.path.exists(persisted_path))
         finally:
             updated = session.get(Memory, memory.id)
             file_path = updated.file_path if updated is not None else None
@@ -231,6 +232,8 @@ class WebAppTests(unittest.TestCase):
             session.commit()
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
+            if os.path.exists(persisted_path):
+                os.remove(persisted_path)
 
     def test_edit_memory_identifier_rejects_duplicate(self):
         suffix = uuid.uuid4().hex
