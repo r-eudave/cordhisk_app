@@ -480,6 +480,7 @@ class WebAppTests(unittest.TestCase):
                     'title': 'Updated memory',
                     'text': 'Example <dc:title type="memory">keep me</dc:title> and <dc:title cho="PR75">watch</dc:title> text',
                     'delete_memory_metadata[dc:title]': '1',
+                    'remove_selected': '1',
                 },
                 follow_redirects=True,
             )
@@ -509,6 +510,7 @@ class WebAppTests(unittest.TestCase):
                     'title': 'Updated memory',
                     'text': 'Before <dc:title type="memory">Momo</dc:title> after',
                     'delete_memory_metadata[dc:title]': '1',
+                    'remove_selected': '1',
                 },
                 follow_redirects=True,
             )
@@ -859,6 +861,7 @@ class WebAppTests(unittest.TestCase):
                 data={
                     'title': 'Duplicate CHO metadata',
                     'delete_cho_metadata[1]': '1',
+                    'remove_selected': '1',
                 },
                 follow_redirects=True,
             )
@@ -1147,6 +1150,7 @@ class WebAppTests(unittest.TestCase):
                     'text': 'Before <dc:title cho="PR75">watch</dc:title> after',
                     'delete_cho_metadata[PR75][dc:title]': '1',
                     'cho_metadata[PR75][dc:title]': 'watch',
+                    'remove_selected': '1',
                 },
                 follow_redirects=True,
             )
@@ -1242,6 +1246,7 @@ class WebAppTests(unittest.TestCase):
                     'memory_latitude': '52.011576',
                     'memory_longitude': '4.357068',
                     'delete_memory_metadata[wgs84_pos:lat]': '1',
+                    'remove_selected': '1',
                 },
                 follow_redirects=True,
             )
@@ -1249,6 +1254,35 @@ class WebAppTests(unittest.TestCase):
             updated = session.get(Memory, memory.id)
             self.assertNotIn('wgs84_pos:lat', updated.text)
             self.assertNotIn('wgs84_pos:long', updated.text)
+        finally:
+            session.delete(memory)
+            session.commit()
+
+    def test_inline_edit_with_ticked_checkbox_updates_instead_of_deleting(self):
+        text = (
+            '=== MEMORY METADATA START ===\n'
+            '<dc:creator type="memory">Old Author</dc:creator>\n'
+            '=== MEMORY METADATA END ===\n\nBody text'
+        )
+        memory = Memory(custom_id='test-inline-edit-ticked', title='Inline edit', text=text, file_path='demo.txt')
+        session.add(memory)
+        session.commit()
+        session.refresh(memory)
+
+        try:
+            response = self.client.post(
+                f'/memories/{memory.id}/edit',
+                data={
+                    'delete_memory_metadata[dc:creator]': '1',
+                    'edit_memory_metadata_field': 'dc:creator',
+                    'edit_memory_metadata_value': 'New Author',
+                },
+                follow_redirects=True,
+            )
+            self.assertEqual(response.status_code, 200)
+            updated = session.get(Memory, memory.id)
+            self.assertIn('<dc:creator type="memory">New Author</dc:creator>', updated.text)
+            self.assertNotIn('Old Author', updated.text)
         finally:
             session.delete(memory)
             session.commit()

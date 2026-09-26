@@ -1436,7 +1436,9 @@ def create_app(testing=False):
     else:
       metadata_map.pop(MEMORY_LICENSE_FIELD, None)
 
-    for key in request.form:
+    # Ticked checkboxes are also posted by other submits (e.g. inline edit), so only the Remove button deletes.
+    delete_keys = list(request.form) if request.form.get("remove_selected") else []
+    for key in delete_keys:
       if key.startswith("delete_memory_metadata[") and key.endswith("]"):
         memory_metadata_ops = True
         field = key[len("delete_memory_metadata["):-1]
