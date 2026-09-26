@@ -201,9 +201,11 @@ HTML_TEMPLATE = """
       .side-btn.alt:hover { background: rgba(255, 255, 255, 0.12); color: white; }
       .contextual-action { display: block; width: 100%; box-sizing: border-box; height: 28px; margin: 0; padding: 5px 8px; border: 1px solid #e69f00; border-radius: 4px; color: #003b5c; background: #ffffff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; text-decoration: none; }
       .contextual-action:hover { background: #e6f2f8; color: #003b5c; }
-      .contextual-action-row { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; min-height: 28px; flex-wrap: wrap; margin: 12px 0 20px; padding: 0 2px; clear: both; }
+      .contextual-action-row { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; min-height: 28px; flex-wrap: wrap; margin: 10px 0 12px; padding: 0 2px; clear: both; }
       .contextual-action-row .contextual-action { flex: 1 1 auto; width: auto; margin: 0; }
       .contextual-label { align-self: center; color: white; font-size: 10px; font-weight: 700; }
+      .contextual-format-link { display: inline; margin: 0 6px 0 0; padding: 0; color: #ffd580; font-size: 12px; font-weight: 700; text-decoration: underline; background: none; border: 0; }
+      .contextual-format-link:hover, .contextual-format-link:focus { color: #ffffff; }
       .memory-controls-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #d9c8b8; }
       .memory-controls-top .cho-filter-row { margin: 0; }
       .side-btn.disabled { pointer-events: none; opacity: 0.6; }
@@ -288,7 +290,7 @@ HTML_TEMPLATE = """
       }
       @media (max-width: 980px) {
         .shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; overflow: visible; }
-        .sidebar { height: auto; min-height: auto; border-bottom: 1px solid #9a3412; }
+        .sidebar { height: auto; min-height: auto; overflow: visible; border-bottom: 1px solid #9a3412; }
         .grid { grid-template-columns: 1fr; height: auto; }
         .metadata-card { position: static; }
         .menu-toggle { display: block; }
@@ -296,7 +298,7 @@ HTML_TEMPLATE = """
         .sidebar-button-grid { grid-template-columns: 1fr; }
         .side-btn, .side-btn:visited, .sidebar-button-grid button { width: 100%; }
         .content { height: auto; min-height: 0; padding: 14px; overflow: visible; }
-        .sidebar-list-shell { min-height: 180px; max-height: none; overflow: visible; }
+        .sidebar-list-shell { flex: none; min-height: 180px; max-height: none; overflow: visible; }
         .card { padding: 12px; }
         .graph-card { height: auto; min-height: auto; }
         .right-panel { height: auto; min-height: 0; overflow: visible; }
@@ -466,16 +468,16 @@ HTML_TEMPLATE = """
         {% if not focus_cho and panel != 'chos' %}
         <div class="contextual-action-row">
           <span class="contextual-label">Import</span>
-          <a class="contextual-action" href="/?workspace=import">.txt</a>
+          <a class="contextual-format-link" href="/?workspace=import">.txt</a>
           <span class="contextual-label">Export</span>
           {% if selected_memory %}
-          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.rdf">.rdf</a>
-          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.csv?metadata_space={{ active_metadata_space.name }}">.csv</a>
-          <a class="contextual-action" href="/export/memory/{{ selected_memory.id }}.txt">.txt</a>
+          <a class="contextual-format-link" href="/export/memory/{{ selected_memory.id }}.rdf">.rdf</a>
+          <a class="contextual-format-link" href="/export/memory/{{ selected_memory.id }}.csv?metadata_space={{ active_metadata_space.name }}">.csv</a>
+          <a class="contextual-format-link" href="/export/memory/{{ selected_memory.id }}.txt">.txt</a>
           {% else %}
-          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.rdf</a>
-          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.csv</a>
-          <a class="contextual-action" href="#" onclick="alert('Select a memory first.'); return false;">.txt</a>
+          <a class="contextual-format-link" href="#" onclick="alert('Select a memory first.'); return false;">.rdf</a>
+          <a class="contextual-format-link" href="#" onclick="alert('Select a memory first.'); return false;">.csv</a>
+          <a class="contextual-format-link" href="#" onclick="alert('Select a memory first.'); return false;">.txt</a>
           {% endif %}
         </div>
         {% endif %}
@@ -484,11 +486,11 @@ HTML_TEMPLATE = """
           <button type="button" class="contextual-action" id="open-add-cho">Add Object</button>
           <span class="contextual-label">Export</span>
           {% if selected_cho_details %}
-          <a class="contextual-action" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">.rdf</a>
-          <a class="contextual-action" href="/compare/report.csv?cho_id={{ selected_cho_details.label }}&metadata_space={{ active_metadata_space.name }}">.csv</a>
+          <a class="contextual-format-link" href="/export/cho?cho_id={{ selected_cho_details.label }}&mode=all">.rdf</a>
+          <a class="contextual-format-link" href="/compare/report.csv?cho_id={{ selected_cho_details.label }}&metadata_space={{ active_metadata_space.name }}">.csv</a>
           {% else %}
-          <a class="contextual-action" href="#" onclick="alert('Select an object first.'); return false;">.rdf</a>
-          <a class="contextual-action" href="#" onclick="alert('Select an object first.'); return false;">.csv</a>
+          <a class="contextual-format-link" href="#" onclick="alert('Select an object first.'); return false;">.rdf</a>
+          <a class="contextual-format-link" href="#" onclick="alert('Select an object first.'); return false;">.csv</a>
           {% endif %}
         </div>
         <form id="add-cho-pop" class="sidebar-pop" action="/chos/create" method="post">
