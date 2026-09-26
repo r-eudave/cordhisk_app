@@ -8,6 +8,9 @@ CLOSE_ON_UNLOAD_SCRIPT = """
         var markInternalNavigation = function () {
           allowShutdownOnClose = false;
         };
+        // Exposed for same-origin iframes to call synchronously; postMessage is async and
+        // can lose the race against a target="_top" navigation that starts right away.
+        window.__cordhiskMarkInternalNavigation = markInternalNavigation;
         window.addEventListener('message', function (event) {
           if (event.data && event.data.type === 'cordhisk-internal-navigation') {
             markInternalNavigation();
@@ -1561,7 +1564,7 @@ METADATA_SPACES_TEMPLATE = """
         </section>
         {% endif %}
         <section class="panel">
-          <form id="metadata-space-form" method="post" action="/metadata-spaces"{% if embedded %} target="_top"{% endif %}>
+          <form id="metadata-space-form" method="post" action="/metadata-spaces"{% if embedded %} target="_top" onsubmit="if (window.top.__cordhiskMarkInternalNavigation) { window.top.__cordhiskMarkInternalNavigation(); } else { window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*'); }"{% endif %}>
             <input type="hidden" name="original_name" value="{{ editing.name if editing else "" }}">
             <input type="hidden" name="replace" value="1">
             <div class="form-grid">
@@ -1719,7 +1722,7 @@ COMPARE_TEMPLATE = """
         <p>Review metadata fields, instances, counts, and related memories for one object.</p>
       </div>
       <div class="card">
-        <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top" onsubmit="window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*');"{% endif %}>
+        <form method="get" action="{{ '/' if embedded else '/compare' }}"{% if embedded %} target="_top" onsubmit="if (window.top.__cordhiskMarkInternalNavigation) { window.top.__cordhiskMarkInternalNavigation(); } else { window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*'); }"{% endif %}>
           {% if embedded %}<input type="hidden" name="workspace" value="compare">{% endif %}
           <input type="hidden" name="metadata_space" value="{{ metadata_space.name }}">
           <label>Object</label>
@@ -1855,7 +1858,11 @@ COMPARE_TEMPLATE = """
     document.addEventListener('click', function (event) {
       var link = event.target.closest && event.target.closest('a[target="_top"]');
       if (link) {
-        window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*');
+        if (window.top.__cordhiskMarkInternalNavigation) {
+          window.top.__cordhiskMarkInternalNavigation();
+        } else {
+          window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*');
+        }
       }
     }, true);
   }
@@ -1975,7 +1982,7 @@ IMPORT_TEMPLATE = """
         <p>Upload a text file and assign the initial memory metadata before the memory becomes available in the web app.</p>
       </div>
       <div class="card">
-        <form action="/memories/import" method="post" enctype="multipart/form-data"{% if embedded and import_ready %} target="_top"{% endif %}>
+        <form action="/memories/import" method="post" enctype="multipart/form-data"{% if embedded and import_ready %} target="_top" onsubmit="if (window.top.__cordhiskMarkInternalNavigation) { window.top.__cordhiskMarkInternalNavigation(); } else { window.top.postMessage({type: 'cordhisk-internal-navigation'}, '*'); }"{% endif %}>
           {% if embedded %}<input type="hidden" name="embedded" value="1">{% endif %}
           {% if not import_ready %}
           <input type="hidden" name="stage" value="prepare">

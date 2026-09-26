@@ -1965,10 +1965,31 @@ def create_app(testing=False):
   def health():
     return {"status": "ok"}
 
+  def _local_machine_addresses():
+    addresses = {"127.0.0.1", "::1"}
+    try:
+      addresses.update(socket.gethostbyname_ex(socket.gethostname())[2])
+    except OSError:
+      pass
+    try:
+      with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("8.8.8.8", 80))
+        addresses.add(s.getsockname()[0])
+    except OSError:
+      pass
+    return addresses
+
   @app.route("/shutdown", methods=["POST"])
   def shutdown():
     if app.config.get("TESTING"):
       return {"status": "shutdown"}
+
+    # Only the machine running the server can trigger a shutdown; LAN clients closing
+    # their tab must not be able to take the shared app down for everyone else. Check
+    # against every local address (not just 127.0.0.1) so this still works when the
+    # host itself browses via its own LAN IP.
+    if request.remote_addr not in _local_machine_addresses():
+      return {"status": "ignored"}, 403
 
     shutdown_func = request.environ.get("werkzeug.server.shutdown")
     if callable(shutdown_func):

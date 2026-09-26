@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.build-venv/
 
 # Database
 cordhisk.db
